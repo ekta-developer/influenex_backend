@@ -14,10 +14,15 @@ import CampaignType from "./models/CampaignType.js";
 import { seedCampaignTypes } from "./seeders/seedCampaignTypes.js";
 import campaignRoutes from "./routes/campaignRoutes.js";
 import path from "path";
+import brandRoutes from "./routes/brandRoutes.js";
+import businessHackRoutes from "./routes/businessHackRoutes.js";
+import businessHackDetailRoutes from "./routes/businessHackDetailRoutes.js";
+import businessHackStep3Routes from "./routes/businessHackDetail2Routes.js";
+import businessHackStep4Routes from "./routes/businessHackStep4Routes.js";
 
 dotenv.config();
 
-const app = express();   // ✅ FIRST create app
+const app = express(); // ✅ FIRST create app
 
 // ================== MIDDLEWARES ==================
 app.use(cors());
@@ -25,7 +30,7 @@ app.use(bodyParser.json());
 
 // ✅ Serve uploads folder (ONLY ONCE)
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
-
+app.use("/uploads", express.static("uploads"));
 // ================== ROUTES ==================
 app.use("/api/auth", otpRoutes);
 app.use("/api/auth", authRoutes);
@@ -34,7 +39,12 @@ app.use("/api/cities", cityRoutes);
 app.use("/api", businessTypeRoutes);
 app.use("/api/business", businessRoutes);
 app.use("/api/campaigns", campaignRoutes);
-
+app.use("/api/brands", brandRoutes);
+app.use("/api/business-hacks", businessHackRoutes);
+app.use("/api/business-hack-details", businessHackDetailRoutes);
+app.use("/api/business-hack-step3", businessHackStep3Routes);
+app.use("/api/business-hack-step4", businessHackStep4Routes);
+app.use("/uploads", express.static("uploads"));
 // ================== SERVER START ==================
 const startServer = async () => {
   try {
@@ -49,7 +59,7 @@ const startServer = async () => {
 
     app.listen(process.env.PORT || 5000, () => {
       console.log(
-        `Server running on http://localhost:${process.env.PORT || 5000}`
+        `Server running on http://localhost:${process.env.PORT || 5000}`,
       );
     });
   } catch (error) {

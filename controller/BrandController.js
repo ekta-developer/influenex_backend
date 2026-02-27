@@ -1,6 +1,30 @@
 import Brand from "../models/Brand.js";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
-// ✅ CREATE Brand
+// Ensure logo folder exists
+const logoDir = "uploads/logo";
+if (!fs.existsSync(logoDir)) {
+  fs.mkdirSync(logoDir, { recursive: true });
+}
+
+// Multer Storage
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, logoDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+
+export const uploadLogo = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+}).single("logo");
+
+// ================= CREATE BRAND =================
 export const createBrand = async (req, res) => {
   try {
     const {
@@ -13,11 +37,11 @@ export const createBrand = async (req, res) => {
       description,
     } = req.body;
 
-    const logo = req.file ? `/uploads/${req.file.filename}` : null;
+    const logoPath = req.file ? req.file.path : null;
 
     const brand = await Brand.create({
       brandName,
-      logo,
+      logo: logoPath,
       website,
       instagramPage,
       category,
@@ -28,7 +52,6 @@ export const createBrand = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Brand created successfully",
       data: brand,
     });
   } catch (error) {
@@ -39,11 +62,11 @@ export const createBrand = async (req, res) => {
   }
 };
 
-// ✅ GET ALL Brands
+// ================= GET ALL BRANDS =================
 export const getAllBrands = async (req, res) => {
   try {
     const brands = await Brand.findAll({
-      order: [["createdAt", "DESC"]],
+      order: [["id", "DESC"]],
     });
 
     res.status(200).json({
@@ -58,12 +81,10 @@ export const getAllBrands = async (req, res) => {
   }
 };
 
-// ✅ GET Brand BY ID
+// ================= GET SINGLE BRAND =================
 export const getBrandById = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    const brand = await Brand.findByPk(id);
+    const brand = await Brand.findByPk(req.params.id);
 
     if (!brand) {
       return res.status(404).json({
@@ -84,12 +105,10 @@ export const getBrandById = async (req, res) => {
   }
 };
 
-// ✅ UPDATE Brand
+// ================= UPDATE BRAND =================
 export const updateBrand = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    const brand = await Brand.findByPk(id);
+    const brand = await Brand.findByPk(req.params.id);
 
     if (!brand) {
       return res.status(404).json({
@@ -98,13 +117,33 @@ export const updateBrand = async (req, res) => {
       });
     }
 
-    const updatedData = { ...req.body };
+    const {
+      brandName,
+      website,
+      instagramPage,
+      category,
+      city,
+      gstNumber,
+      description,
+    } = req.body;
 
-    if (req.file) {
-      updatedData.logo = `/uploads/${req.file.filename}`;
+    // If new logo uploaded, delete old one
+    if (req.file && brand.logo) {
+      if (fs.existsSync(brand.logo)) {
+        fs.unlinkSync(brand.logo);
+      }
+      brand.logo = req.file.path;
     }
 
-    await brand.update(updatedData);
+    brand.brandName = brandName ?? brand.brandName;
+    brand.website = website ?? brand.website;
+    brand.instagramPage = instagramPage ?? brand.instagramPage;
+    brand.category = category ?? brand.category;
+    brand.city = city ?? brand.city;
+    brand.gstNumber = gstNumber ?? brand.gstNumber;
+    brand.description = description ?? brand.description;
+
+    await brand.save();
 
     res.status(200).json({
       success: true,
@@ -119,18 +158,21 @@ export const updateBrand = async (req, res) => {
   }
 };
 
-// ✅ DELETE Brand
+// ================= DELETE BRAND =================
 export const deleteBrand = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    const brand = await Brand.findByPk(id);
+    const brand = await Brand.findByPk(req.params.id);
 
     if (!brand) {
       return res.status(404).json({
         success: false,
         message: "Brand not found",
       });
+    }
+
+    // Delete logo file
+    if (brand.logo && fs.existsSync(brand.logo)) {
+      fs.unlinkSync(brand.logo);
     }
 
     await brand.destroy();

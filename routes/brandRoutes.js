@@ -1,20 +1,19 @@
 import express from "express";
-import { upload } from "../middlewares/upload.js";
 import {
   createBrand,
   getAllBrands,
   getBrandById,
   updateBrand,
   deleteBrand,
-} from "../controllers/brandController.js";
+  uploadLogo,
+} from "../controller/BrandController.js";
 
 const router = express.Router();
 
-router.post("/", upload.single("logo"), createBrand);
-router.put("/:id", upload.single("logo"), updateBrand);
-
+router.post("/", uploadLogo, createBrand);
 router.get("/", getAllBrands);
 router.get("/:id", getBrandById);
+router.put("/:id", uploadLogo, updateBrand);
 router.delete("/:id", deleteBrand);
 
 export default router;

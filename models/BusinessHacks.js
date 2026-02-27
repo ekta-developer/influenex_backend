@@ -1,23 +1,14 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 
-const Brand = sequelize.define(
-  "Brand",
+const BusinessHack = sequelize.define(
+  "BusinessHack",
   {
-    brandName: {
+    campaignName: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    logo: {
-      type: DataTypes.STRING,
-    },
-    website: {
-      type: DataTypes.STRING,
-    },
-    instagramPage: {
-      type: DataTypes.STRING,
-    },
-    category: {
+    state: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -25,17 +16,18 @@ const Brand = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    gstNumber: {
+    campaignType: {
       type: DataTypes.STRING,
-    },
-    description: {
-      type: DataTypes.TEXT,
+      allowNull: false,
+      validate: {
+        isIn: [["Paid", "Reimbursement", "Barter"]],
+      },
     },
   },
   {
-    tableName: "brands",
+    tableName: "business_hacks",
     timestamps: true,
   }
 );
 
-export default Brand;
+export default BusinessHack;
