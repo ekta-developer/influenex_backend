@@ -22,6 +22,7 @@ import businessHackStep4Routes from "./routes/businessHackStep4Routes.js";
 import influencerUserRoutes from "./routes/InfluencerUserRoutes.js";
 import influencerCategoryRoutes from "./routes/InfluencerCategoryRoutes.js";
 import profileRoutes from "./routes/ProfileRoutes.js";
+import BusinessRoutes from "./routes/BusinessProfileRoutes.js";
 
 dotenv.config();
 
@@ -52,6 +53,8 @@ app.use("/api/influencers", influencerUserRoutes);
 app.use("/api/categories", influencerCategoryRoutes);
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use("/api/profiles", profileRoutes);
+app.use("/api/business-profile", BusinessRoutes);
+
 // ================== SERVER START ==================
 const startServer = async () => {
   try {
