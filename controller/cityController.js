@@ -1,6 +1,7 @@
 import axios from "axios";
 import chalk from "chalk";
 import City from "../models/cities.js";
+import { convertToString } from "../HelperFunction/Helper.js";
 
 export const importIndianCities = async (req, res) => {
   console.log(chalk.blue("🚀 Starting Indian Cities Import..."));
@@ -68,20 +69,53 @@ export const importIndianCities = async (req, res) => {
 export const getAllCitiesDropdown = async (req, res) => {
   try {
     const cities = await City.findAll({
-      attributes: ["id", "name"], // Only required fields
-      order: [["name", "ASC"]], // Sort alphabetically
+      attributes: ["id", "name"],
+      order: [["name", "ASC"]],
     });
+
+    const cityData = cities.map((city) => city.toJSON());
 
     res.status(200).json({
       success: true,
-      total: cities.length,
-      data: cities,
+      total: String(cities.length),
+      message: "Cities fetched successfully",
+      data: convertToString(cityData),
     });
   } catch (error) {
     console.error("Error fetching cities:", error.message);
+
+    res.status(500).json({
+      success: "false",
+      message: "Failed to fetch cities",
+    });
+  }
+};
+
+
+//get all cities with id and name
+export const getCities = async (req, res) => {
+  try {
+    const cities = await City.findAll({
+      attributes: ["id", "name"],
+      order: [["name", "ASC"]],
+    });
+
+    const formattedCities = cities.map(city => ({
+      id: String(city.id),
+      name: city.name
+    }));
+
+    res.status(200).json({
+      success: true,
+      total: formattedCities.length,
+      data: formattedCities,
+    });
+
+  } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Failed to fetch cities",
+      message: "Error fetching cities",
+      error: error.message,
     });
   }
 };

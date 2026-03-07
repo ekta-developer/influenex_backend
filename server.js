@@ -23,7 +23,7 @@ import influencerUserRoutes from "./routes/InfluencerUserRoutes.js";
 import influencerCategoryRoutes from "./routes/InfluencerCategoryRoutes.js";
 import profileRoutes from "./routes/ProfileRoutes.js";
 import BusinessRoutes from "./routes/BusinessProfileRoutes.js";
-
+import cityRoutesTwo from "./routes/CityRoutesTwo.js";
 dotenv.config();
 
 const app = express(); // ✅ FIRST create app
@@ -54,6 +54,7 @@ app.use("/api/categories", influencerCategoryRoutes);
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use("/api/profiles", profileRoutes);
 app.use("/api/business-profile", BusinessRoutes);
+app.use('/api/city', cityRoutesTwo);
 
 // ================== SERVER START ==================
 const startServer = async () => {

@@ -1,32 +1,23 @@
+import { convertToString } from "../HelperFunction/Helper.js";
 import Business from "../models/Business.js";
-
 
 // ✅ CREATE Business
 export const createBusiness = async (req, res) => {
   try {
-    const { businessName, mobileNumber, city, businessType, gstNumber } = req.body;
-
-    const business = await Business.create({
-      businessName,
-      mobileNumber,
-      city,
-      businessType,
-      gstNumber,
-    });
+    const business = await Business.create(req.body);
 
     return res.status(201).json({
       success: true,
       message: "Business registered successfully",
-      data: business,
+      data: convertToString(business.toJSON()),
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      error: error.message,
+      message: error.message,
     });
   }
 };
-
 
 // ✅ GET ALL Businesses
 export const getAllBusinesses = async (req, res) => {
@@ -35,7 +26,7 @@ export const getAllBusinesses = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: businesses,
+      data: convertToString(businesses.map((b) => b.toJSON())),
     });
   } catch (error) {
     return res.status(500).json({
@@ -44,7 +35,6 @@ export const getAllBusinesses = async (req, res) => {
     });
   }
 };
-
 
 // ✅ GET Single Business
 export const getBusinessById = async (req, res) => {
@@ -62,7 +52,7 @@ export const getBusinessById = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: business,
+      data: convertToString(business.toJSON()),
     });
   } catch (error) {
     return res.status(500).json({
@@ -71,7 +61,6 @@ export const getBusinessById = async (req, res) => {
     });
   }
 };
-
 
 // ✅ UPDATE Business
 export const updateBusiness = async (req, res) => {
@@ -92,7 +81,7 @@ export const updateBusiness = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Business updated successfully",
-      data: business,
+      data: convertToString(business.toJSON()),
     });
   } catch (error) {
     return res.status(500).json({
@@ -101,7 +90,6 @@ export const updateBusiness = async (req, res) => {
     });
   }
 };
-
 
 // ✅ DELETE Business
 export const deleteBusiness = async (req, res) => {

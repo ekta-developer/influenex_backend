@@ -1,6 +1,7 @@
 import Influencer from "../models/influencer.js";
 import sequelize from "../config/database.js";
 import slugify from "slugify";
+import { convertToString } from "../HelperFunction/Helper.js";
 
 export const createInfluencer = async (req, res) => {
   const transaction = await sequelize.transaction();
@@ -104,7 +105,7 @@ export const createInfluencer = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Influencer created successfully",
-      data: influencer,
+      data: convertToString(influencer.toJSON()) ,
     });
   } catch (error) {
     console.error("FULL ERROR:", error);
@@ -250,7 +251,7 @@ export const updateInfluencer = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Influencer updated successfully",
-      data: influencer,
+      data: convertToString(influencer.toJSON()),
     });
   } catch (error) {
     console.error("UPDATE ERROR:", error);
@@ -285,7 +286,7 @@ export const getAllInfluencers = async (req, res) => {
     return res.status(200).json({
       success: true,
       total: influencers.length,
-      data: influencers,
+      data: convertToString(influencers.toJSON()),
     });
   } catch (error) {
     console.error("GET ALL ERROR:", error);
