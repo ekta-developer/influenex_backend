@@ -9,11 +9,19 @@ const InfluencerCategory = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
+    //added as a foreign key
+    influencer_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "influencersUser",
+        key: "id",
+      },
+    },
 
     categoryName: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
   },
   {

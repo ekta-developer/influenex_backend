@@ -1,52 +1,68 @@
 import InfluencerCategory from "../models/InfluencerCategory.js";
 
-
 // ✅ CREATE Category
 export const createCategory = async (req, res) => {
   try {
-    const { categoryName } = req.body;
+    const { influencer_id, categories } = req.body;
 
-    if (!categoryName) {
-      return res.status(400).json({
-        success: false,
-        message: "Category name is required",
+    if (!influencer_id) {
+      return res.status(200).json({
+        status: false,
+        message: "Influencer id is required",
       });
     }
 
-    const category = await InfluencerCategory.create({ categoryName });
+    if (!categories || !Array.isArray(categories) || categories.length === 0) {
+      return res.status(200).json({
+        status: false,
+        message: "Categories array is required",
+      });
+    }
 
-    res.status(201).json({
-      success: true,
-      data: category,
+    const categoryData = categories.map((name) => ({
+      influencer_id,
+      categoryName: name,
+    }));
+
+    const createdCategories = await InfluencerCategory.bulkCreate(categoryData);
+
+    return res.status(200).json({
+      status: true,
+      message: "Categories created successfully",
+      data: createdCategories,
     });
+
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      error: error.message,
+    return res.status(500).json({
+      status: false,
+      message: error.message,
     });
   }
 };
-
 
 // ✅ GET All Categories
 export const getAllCategories = async (req, res) => {
   try {
+
+    const { influencer_id } = req.params;
+
     const categories = await InfluencerCategory.findAll({
+      where: { influencer_id },
       order: [["id", "ASC"]],
     });
 
-    res.status(200).json({
-      success: true,
+    return res.status(200).json({
+      status: true,
       data: categories,
     });
+
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
+    return res.status(500).json({
+      status: false,
+      message: error.message,
     });
   }
 };
-
 
 // ✅ GET Category by ID
 export const getCategoryById = async (req, res) => {
@@ -55,73 +71,95 @@ export const getCategoryById = async (req, res) => {
 
     if (!category) {
       return res.status(404).json({
-        success: false,
+        status: false,
         message: "Category not found",
       });
     }
 
     res.status(200).json({
-      success: true,
+      status: true,
       data: category,
     });
   } catch (error) {
     res.status(500).json({
-      success: false,
+      status: false,
       error: error.message,
     });
   }
 };
-
 
 // ✅ UPDATE Category
 export const updateCategory = async (req, res) => {
   try {
-    const category = await InfluencerCategory.findByPk(req.params.id);
 
-    if (!category) {
-      return res.status(404).json({
-        success: false,
-        message: "Category not found",
+    const { categories } = req.body;
+
+    if (!categories || !Array.isArray(categories)) {
+      return res.status(200).json({
+        status: false,
+        message: "Categories array is required",
       });
     }
 
-    await category.update(req.body);
+    const updatedCategories = [];
 
-    res.status(200).json({
-      success: true,
-      data: category,
+    for (const item of categories) {
+
+      const category = await InfluencerCategory.findByPk(item.id);
+
+      if (category) {
+
+        await category.update({
+          categoryName: item.categoryName,
+        });
+
+        updatedCategories.push(category);
+      }
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Categories updated successfully",
+      data: updatedCategories,
     });
+
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      error: error.message,
+    return res.status(500).json({
+      status: false,
+      message: error.message,
     });
   }
 };
-
-
 // ✅ DELETE Category
 export const deleteCategory = async (req, res) => {
   try {
-    const category = await InfluencerCategory.findByPk(req.params.id);
 
-    if (!category) {
-      return res.status(404).json({
-        success: false,
-        message: "Category not found",
+    const { ids } = req.body;
+
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(200).json({
+        status: false,
+        message: "Ids array is required",
       });
     }
 
-    await category.destroy();
+    await InfluencerCategory.destroy({
+      where: {
+        id: ids,
+      },
+    });
 
-    res.status(200).json({
-      success: true,
-      message: "Category deleted successfully",
+    return res.status(200).json({
+      status: true,
+      message: "Categories deleted successfully",
     });
+
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
+
+    return res.status(500).json({
+      status: false,
+      message: error.message,
     });
+
   }
 };

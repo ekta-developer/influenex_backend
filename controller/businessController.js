@@ -1,16 +1,61 @@
 import { convertToString } from "../HelperFunction/Helper.js";
-import Business from "../models/Business.js";
+import Influencer from "../models/InfluencerUser.js";
+import BusinessRegistration from "../models/Business.js";
 
 // ✅ CREATE Business
 export const createBusiness = async (req, res) => {
   try {
-    const business = await Business.create(req.body);
+    const { mobileNumber } = req.body;
 
-    return res.status(201).json({
+    if (!mobileNumber) {
+      return res.status(200).json({
+        success: false,
+        message: "Mobile number is required",
+        data: null,
+      });
+    }
+
+    // 🔹 Check in InfluencerUser table
+    const influencerUser = await Influencer.findOne({
+      where: { mobileNumber },
+    });
+
+    if (influencerUser) {
+      return res.status(200).json({
+        success: false,
+        message: "Number already registered with influencer user",
+        data: null,
+      });
+    }
+
+    // 🔹 Check in BusinessRegistration table
+    const businessRegistration = await BusinessRegistration.findOne({
+      where: { mobileNumber },
+    });
+
+    if (businessRegistration) {
+      return res.status(200).json({
+        success: false,
+        message: "Number already registered with business registration",
+        data: null,
+      });
+    }
+
+    // 🔹 Convert empty GST to null
+    const payload = {
+      ...req.body,
+      gstNumber: req.body.gstNumber || null,
+    };
+
+    // 🔹 Create Business
+    const business = await Business.create(payload);
+
+    return res.status(200).json({
       success: true,
       message: "Business registered successfully",
       data: convertToString(business.toJSON()),
     });
+
   } catch (error) {
     return res.status(500).json({
       success: false,

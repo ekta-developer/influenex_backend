@@ -1,22 +1,76 @@
 import Influencer from "../models/InfluencerUser.js";
+import BusinessRegistration from "../models/Business.js";
 
 // ✅ CREATE Influencer
 export const createInfluencer = async (req, res) => {
   try {
-    const influencer = await Influencer.create(req.body);
+    const { fullName, mobileNumber, email, dob, city, gender } = req.body;
 
-    res.status(201).json({
-      success: true,
-      data: influencer,
+    if (!mobileNumber) {
+      return res.status(200).json({
+        response: {
+          status: false,
+          message: "Mobile number is required",
+        },
+      });
+    }
+
+    // Check if number exists in Business table
+    const business = await BusinessRegistration.findOne({
+      where: { mobileNumber },
+    });
+
+    if (business) {
+      return res.status(200).json({
+        response: {
+          status: false,
+          message: "Number is already registered with business",
+          businessId: business.id,
+        },
+      });
+    }
+
+    // Check if influencer already exists
+    const influencerExists = await Influencer.findOne({
+      where: { mobileNumber },
+    });
+
+    if (influencerExists) {
+      return res.status(200).json({
+        response: {
+          status: false,
+          message: "Number is already registered with influencer user",
+          influencerId: influencerExists.id,
+        },
+      });
+    }
+
+    // Create Influencer
+    const influencer = await Influencer.create({
+      fullName,
+      mobileNumber,
+      email,
+      dob,
+      city,
+      gender,
+    });
+
+    return res.status(201).json({
+      response: {
+        status: true,
+        message: "Influencer created successfully",
+        ...influencer.toJSON(),
+      },
     });
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      error: error.message,
+    return res.status(500).json({
+      response: {
+        status: false,
+        message: error.message,
+      },
     });
   }
 };
-
 // ✅ GET All Influencers
 export const getAllInfluencers = async (req, res) => {
   try {

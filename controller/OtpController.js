@@ -1,4 +1,8 @@
 import Otp from "../models/Otp.js";
+import BusinessRegistration from "../models/Business.js";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || "yourSecretKey";
 
 /* =========================
    Generate Random 6 Digit OTP
@@ -15,31 +19,58 @@ export const sendOtp = async (req, res) => {
     const { phone } = req.body;
 
     if (!phone) {
-      return res.status(400).json({ message: "Phone number is required" });
+      return res.status(200).json({
+        status: false,
+        message: "Phone number is required",
+      });
     }
 
-    const otpCode = generateOTP();
+    // Check if phone exists in business_registration
+    const business = await BusinessRegistration.findOne({
+      where: { mobileNumber: phone },
+    });
 
-    const expiryTime = new Date();
-    expiryTime.setMinutes(expiryTime.getMinutes() + 5); // 5 min expiry
+    if (!business) {
+      return res.status(200).json({
+        status: false,
+        message: "Mobile number is not registered with any business",
+      });
+    }
 
-    // Delete previous OTP for this phone
-    await Otp.destroy({ where: { phone } });
+    // Check last OTP to prevent spam
+    // const lastOtp = await Otp.findOne({
+    //   where: { phone },
+    //   order: [["id", "DESC"]],
+    // });
 
-    // Save new OTP
+    // if (lastOtp && new Date() < lastOtp.expires_at) {
+    //   return res.status(200).json({
+    //     status: false,
+    //     message: "Please wait before requesting another OTP",
+    //   });
+    // }
+
+    // Generate OTP
+    const otp = generateOTP();
+
+    const expiresAt = new Date(Date.now() + 60 * 1000);
+
     await Otp.create({
       phone,
-      otp_code: otpCode,
-      expires_at: expiryTime,
+      otp_code: otp,
+      expires_at: expiresAt,
+      is_verified: false,
     });
 
-    console.log("Generated OTP:", otpCode); // 🔥 Replace with SMS service later
-
-    res.json({
+    return res.status(200).json({
+      status: true,
       message: "OTP sent successfully",
+      otp: otp, // remove in production
+      expiresAt: expiresAt,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(200).json({
+      status: false,
       message: "Failed to send OTP",
       error: error.message,
     });
@@ -55,41 +86,57 @@ export const verifyOtp = async (req, res) => {
 
     if (!phone || !otp) {
       return res.status(400).json({
+        status: false,
         message: "Phone and OTP are required",
       });
     }
 
-    const record = await Otp.findOne({ where: { phone } });
+    const record = await Otp.findOne({
+      where: { phone },
+      order: [["id", "DESC"]], // safer than createdAt
+    });
 
     if (!record) {
       return res.status(400).json({
+        status: false,
         message: "OTP not found",
       });
     }
 
-    // Check expiry
     if (new Date() > record.expires_at) {
       return res.status(400).json({
+        status: false,
         message: "OTP expired",
       });
     }
 
-    // Check match
-    if (record.otp_code !== otp) {
+    if (String(record.otp_code) !== String(otp)) {
       return res.status(400).json({
+        status: false,
         message: "Invalid OTP",
       });
     }
 
-    // Mark as verified
     record.is_verified = true;
     await record.save();
 
+    const token = jwt.sign(
+      {
+        phone: phone,
+        otpVerified: true,
+      },
+      JWT_SECRET,
+      { expiresIn: "1m" },
+    );
+
     res.json({
+      status: true,
       message: "OTP verified successfully",
+      token: token,
     });
   } catch (error) {
     res.status(500).json({
+      status: false,
       message: "OTP verification failed",
       error: error.message,
     });

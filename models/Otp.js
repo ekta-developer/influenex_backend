@@ -4,11 +4,6 @@ import sequelize from "../config/database.js";
 const Otp = sequelize.define(
   "Otp",
   {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
     phone: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -27,9 +22,8 @@ const Otp = sequelize.define(
     },
   },
   {
-    timestamps: true,
-    createdAt: "created_at",
-    updatedAt: false,
+    tableName: "otps",
+    timestamps: true, // ✅ This creates createdAt & updatedAt
   }
 );
 
