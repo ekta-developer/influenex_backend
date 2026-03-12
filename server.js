@@ -24,6 +24,14 @@ import influencerCategoryRoutes from "./routes/InfluencerCategoryRoutes.js";
 import profileRoutes from "./routes/ProfileRoutes.js";
 import BusinessRoutes from "./routes/BusinessProfileRoutes.js";
 import cityRoutesTwo from "./routes/CityRoutesTwo.js";
+import influencerListRoutes from "./routes/influencerListRoutes.js";
+import { seedInfluencerList } from "./seeders/influencerListSeeder.js";
+import inhacksRoutes from "./routes/inhacksRoutes.js";
+import businessHacksRoutes from "./routes/businessHacksVideoRoutes.js";
+import referralRoutes from "./routes/referralRoutes.js";
+import bannerRoutes from "./routes/bannerRoutes.js";
+import influencerDashboardRoutes from "./routes/influencerDashboardRoutes.js";
+
 dotenv.config();
 
 const app = express(); // ✅ FIRST create app
@@ -55,7 +63,12 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use("/api/profiles", profileRoutes);
 app.use("/api/business-profile", BusinessRoutes);
 app.use('/api/city', cityRoutesTwo);
-
+app.use("/api", influencerListRoutes);
+app.use("/api/inhacks", inhacksRoutes);
+app.use("/api/business-hacks-video", businessHacksRoutes);
+app.use("/api/referrals", referralRoutes);
+app.use("/api/banners", bannerRoutes);
+app.use("/api/influencer-dashboard", influencerDashboardRoutes);
 // ================== SERVER START ==================
 const startServer = async () => {
   try {

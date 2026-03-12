@@ -13,3 +13,10 @@ export const convertToString = (obj) => {
 
   return obj !== null && obj !== undefined ? String(obj) : "";
 };
+
+
+export const convertIdToString = (list) =>
+  list.map((item) => {
+    const data = item.toJSON();
+    return { ...data, id: data.id.toString() };
+  });

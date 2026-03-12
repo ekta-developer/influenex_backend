@@ -1,54 +1,44 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 
-const Influencer = sequelize.define(
-  "Influencer",
+const InfluencerUser = sequelize.define(
+  "InfluencerUser",
   {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
-      primaryKey: true,
+      primaryKey: true
     },
-
     fullName: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: false
     },
-
     mobileNumber: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
+      unique: true
     },
-
     email: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
-      validate: {
-        isEmail: true,
-      },
+      unique: true
     },
-
     dob: {
       type: DataTypes.DATEONLY,
-      allowNull: false,
+      allowNull: false
     },
-
     city: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: false
     },
-
     gender: {
-      type: DataTypes.ENUM("Male", "Female", "Other"),
-      allowNull: false,
-    },
+      type: DataTypes.STRING
+    }
   },
   {
     tableName: "influencersUser",
-    timestamps: true,
-  },
+    timestamps: true
+  }
 );
 
-export default Influencer;
+export default InfluencerUser;

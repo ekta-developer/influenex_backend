@@ -15,7 +15,6 @@ export const createInfluencer = async (req, res) => {
       });
     }
 
-    // Check if number exists in Business table
     const business = await BusinessRegistration.findOne({
       where: { mobileNumber },
     });
@@ -30,7 +29,6 @@ export const createInfluencer = async (req, res) => {
       });
     }
 
-    // Check if influencer already exists
     const influencerExists = await Influencer.findOne({
       where: { mobileNumber },
     });
@@ -45,14 +43,13 @@ export const createInfluencer = async (req, res) => {
       });
     }
 
-    // Create Influencer
     const influencer = await Influencer.create({
       fullName,
       mobileNumber,
       email,
-      dob,
+      dob: dob ? new Date(dob) : null,
       city,
-      gender,
+      gender: gender?.toLowerCase(),
     });
 
     return res.status(201).json({
@@ -63,14 +60,20 @@ export const createInfluencer = async (req, res) => {
       },
     });
   } catch (error) {
+
+    console.log("ERROR >>>", error);
+
     return res.status(500).json({
       response: {
         status: false,
-        message: error.message,
+        message: error.errors
+          ? error.errors.map(e => e.message)
+          : error.message,
       },
     });
   }
 };
+
 // ✅ GET All Influencers
 export const getAllInfluencers = async (req, res) => {
   try {

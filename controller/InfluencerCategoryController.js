@@ -3,7 +3,7 @@ import InfluencerCategory from "../models/InfluencerCategory.js";
 // ✅ CREATE Category
 export const createCategory = async (req, res) => {
   try {
-    const { influencer_id, categories } = req.body;
+    const { influencer_id, categories } = req.body || {};
 
     if (!influencer_id) {
       return res.status(200).json({
@@ -31,7 +31,6 @@ export const createCategory = async (req, res) => {
       message: "Categories created successfully",
       data: createdCategories,
     });
-
   } catch (error) {
     return res.status(500).json({
       status: false,
@@ -43,7 +42,6 @@ export const createCategory = async (req, res) => {
 // ✅ GET All Categories
 export const getAllCategories = async (req, res) => {
   try {
-
     const { influencer_id } = req.params;
 
     const categories = await InfluencerCategory.findAll({
@@ -55,7 +53,6 @@ export const getAllCategories = async (req, res) => {
       status: true,
       data: categories,
     });
-
   } catch (error) {
     return res.status(500).json({
       status: false,
@@ -91,7 +88,6 @@ export const getCategoryById = async (req, res) => {
 // ✅ UPDATE Category
 export const updateCategory = async (req, res) => {
   try {
-
     const { categories } = req.body;
 
     if (!categories || !Array.isArray(categories)) {
@@ -104,11 +100,9 @@ export const updateCategory = async (req, res) => {
     const updatedCategories = [];
 
     for (const item of categories) {
-
       const category = await InfluencerCategory.findByPk(item.id);
 
       if (category) {
-
         await category.update({
           categoryName: item.categoryName,
         });
@@ -122,7 +116,6 @@ export const updateCategory = async (req, res) => {
       message: "Categories updated successfully",
       data: updatedCategories,
     });
-
   } catch (error) {
     return res.status(500).json({
       status: false,
@@ -133,7 +126,6 @@ export const updateCategory = async (req, res) => {
 // ✅ DELETE Category
 export const deleteCategory = async (req, res) => {
   try {
-
     const { ids } = req.body;
 
     if (!ids || !Array.isArray(ids)) {
@@ -153,13 +145,10 @@ export const deleteCategory = async (req, res) => {
       status: true,
       message: "Categories deleted successfully",
     });
-
   } catch (error) {
-
     return res.status(500).json({
       status: false,
       message: error.message,
     });
-
   }
 };

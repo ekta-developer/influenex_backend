@@ -1,5 +1,6 @@
 import Otp from "../models/Otp.js";
 import BusinessRegistration from "../models/Business.js";
+import InfluencerUser from "../models/InfluencerUser.js";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "yourSecretKey";
@@ -25,30 +26,21 @@ export const sendOtp = async (req, res) => {
       });
     }
 
-    // Check if phone exists in business_registration
+    // Check phone in BOTH tables
     const business = await BusinessRegistration.findOne({
       where: { mobileNumber: phone },
     });
 
-    if (!business) {
+    const influencer = await InfluencerUser.findOne({
+      where: { mobileNumber: phone },
+    });
+
+    if (!business && !influencer) {
       return res.status(200).json({
         status: false,
-        message: "Mobile number is not registered with any business",
+        message: "Mobile number is not registered",
       });
     }
-
-    // Check last OTP to prevent spam
-    // const lastOtp = await Otp.findOne({
-    //   where: { phone },
-    //   order: [["id", "DESC"]],
-    // });
-
-    // if (lastOtp && new Date() < lastOtp.expires_at) {
-    //   return res.status(200).json({
-    //     status: false,
-    //     message: "Please wait before requesting another OTP",
-    //   });
-    // }
 
     // Generate OTP
     const otp = generateOTP();
@@ -71,12 +63,10 @@ export const sendOtp = async (req, res) => {
   } catch (error) {
     return res.status(200).json({
       status: false,
-      message: "Failed to send OTP",
-      error: error.message,
+      message: error.message || "Failed to send OTP",
     });
   }
 };
-
 /* =========================
    VERIFY OTP
 ========================= */
@@ -93,7 +83,7 @@ export const verifyOtp = async (req, res) => {
 
     const record = await Otp.findOne({
       where: { phone },
-      order: [["id", "DESC"]], // safer than createdAt
+      order: [["id", "DESC"]],
     });
 
     if (!record) {
@@ -122,7 +112,7 @@ export const verifyOtp = async (req, res) => {
 
     const token = jwt.sign(
       {
-        phone: phone,
+        phone,
         otpVerified: true,
       },
       JWT_SECRET,
@@ -137,8 +127,7 @@ export const verifyOtp = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: false,
-      message: "OTP verification failed",
-      error: error.message,
+      message: error.message || "OTP verification failed",
     });
   }
 };
