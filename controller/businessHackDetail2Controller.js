@@ -48,19 +48,19 @@ export const createBusinessHackStep3 = async (req, res) => {
     });
 
     res.status(201).json({
-      success: true,
-      message: "Business Hack Step-3 created successfully",
-      data: step3,
+      response: {
+        success: true,
+        message: "Business Hack Step-3 created successfully",
+        ...step3.dataValues,
+      },
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: error.message,
+      message: error.message,
     });
   }
 };
-
 
 // ✅ GET ALL
 export const getAllBusinessHackStep3 = async (req, res) => {
@@ -74,7 +74,6 @@ export const getAllBusinessHackStep3 = async (req, res) => {
       success: true,
       data,
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -82,7 +81,6 @@ export const getAllBusinessHackStep3 = async (req, res) => {
     });
   }
 };
-
 
 // ✅ GET SINGLE
 export const getBusinessHackStep3ById = async (req, res) => {
@@ -102,7 +100,6 @@ export const getBusinessHackStep3ById = async (req, res) => {
       success: true,
       data,
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -110,7 +107,6 @@ export const getBusinessHackStep3ById = async (req, res) => {
     });
   }
 };
-
 
 // ✅ UPDATE
 export const updateBusinessHackStep3 = async (req, res) => {
@@ -164,7 +160,6 @@ export const updateBusinessHackStep3 = async (req, res) => {
       message: "Business Hack Step-3 updated successfully",
       data: step3,
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -172,7 +167,6 @@ export const updateBusinessHackStep3 = async (req, res) => {
     });
   }
 };
-
 
 // ✅ DELETE
 export const deleteBusinessHackStep3 = async (req, res) => {
@@ -192,7 +186,6 @@ export const deleteBusinessHackStep3 = async (req, res) => {
       success: true,
       message: "Business Hack Step-3 deleted successfully",
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,

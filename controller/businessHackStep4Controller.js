@@ -3,6 +3,7 @@ import BusinessHack from "../models/BusinessHacks.js";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
+import { response } from "express";
 
 // Ensure folders exist
 const campaignDir = "uploads/campaign-images";
@@ -38,13 +39,20 @@ export const uploadMedia = multer({
   { name: "sampleMedia", maxCount: 10 },
 ]);
 
-
 // ✅ CREATE
 export const createBusinessHackStep4 = async (req, res) => {
   try {
-    const { businessHackId } = req.body;
+    const businessHackId = parseInt(req.body?.businessHackId);
+
+    if (!businessHackId) {
+      return res.status(400).json({
+        success: false,
+        message: "businessHackId is required",
+      });
+    }
 
     const campaign = await BusinessHack.findByPk(businessHackId);
+
     if (!campaign) {
       return res.status(404).json({
         success: false,
@@ -57,7 +65,7 @@ export const createBusinessHackStep4 = async (req, res) => {
       : null;
 
     const sampleMedia = req.files?.sampleMedia
-      ? req.files.sampleMedia.map(file => file.path)
+      ? req.files.sampleMedia.map((file) => file.path)
       : [];
 
     const step4 = await BusinessHackStep4.create({
@@ -71,7 +79,6 @@ export const createBusinessHackStep4 = async (req, res) => {
       message: "Step-4 Media uploaded successfully",
       data: step4,
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -79,7 +86,6 @@ export const createBusinessHackStep4 = async (req, res) => {
     });
   }
 };
-
 
 // ✅ GET ALL
 export const getAllBusinessHackStep4 = async (req, res) => {
@@ -87,12 +93,10 @@ export const getAllBusinessHackStep4 = async (req, res) => {
     const data = await BusinessHackStep4.findAll({
       include: BusinessHack,
     });
-
     res.status(200).json({
       success: true,
       data,
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -100,7 +104,6 @@ export const getAllBusinessHackStep4 = async (req, res) => {
     });
   }
 };
-
 
 // ✅ UPDATE
 export const updateBusinessHackStep4 = async (req, res) => {
@@ -125,13 +128,13 @@ export const updateBusinessHackStep4 = async (req, res) => {
     if (req.files?.sampleMedia) {
       // delete old sample media
       if (step4.sampleMedia) {
-        step4.sampleMedia.forEach(file => {
+        step4.sampleMedia.forEach((file) => {
           if (fs.existsSync(file)) {
             fs.unlinkSync(file);
           }
         });
       }
-      step4.sampleMedia = req.files.sampleMedia.map(file => file.path);
+      step4.sampleMedia = req.files.sampleMedia.map((file) => file.path);
     }
 
     await step4.save();
@@ -141,7 +144,6 @@ export const updateBusinessHackStep4 = async (req, res) => {
       message: "Step-4 Media updated successfully",
       data: step4,
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -149,7 +151,6 @@ export const updateBusinessHackStep4 = async (req, res) => {
     });
   }
 };
-
 
 // ✅ DELETE
 export const deleteBusinessHackStep4 = async (req, res) => {
@@ -169,7 +170,7 @@ export const deleteBusinessHackStep4 = async (req, res) => {
     }
 
     if (step4.sampleMedia) {
-      step4.sampleMedia.forEach(file => {
+      step4.sampleMedia.forEach((file) => {
         if (fs.existsSync(file)) {
           fs.unlinkSync(file);
         }
@@ -182,7 +183,6 @@ export const deleteBusinessHackStep4 = async (req, res) => {
       success: true,
       message: "Step-4 deleted successfully",
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,

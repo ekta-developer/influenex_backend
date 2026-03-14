@@ -286,7 +286,7 @@ export const getAllInfluencers = async (req, res) => {
     return res.status(200).json({
       success: true,
       total: influencers.length,
-      data: convertToString(influencers.toJSON()),
+      data: influencers,
     });
   } catch (error) {
     console.error("GET ALL ERROR:", error);

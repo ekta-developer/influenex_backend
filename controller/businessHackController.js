@@ -1,4 +1,5 @@
 import BusinessHack from "../models/BusinessHacks.js";
+import { convertIdToStringBusiness } from "../HelperFunction/Helper.js";
 
 // ✅ CREATE
 export const createBusinessHack = async (req, res) => {
@@ -12,15 +13,19 @@ export const createBusinessHack = async (req, res) => {
       campaignType,
     });
 
+    const formatted = convertIdToStringBusiness(newCampaign);
+
     res.status(201).json({
-      success: true,
-      message: "Campaign created successfully",
-      data: newCampaign,
+      response: {
+        success: true,
+        message: "Campaign created successfully",
+        ...formatted,
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: error.message,
+      message: error.message,
     });
   }
 };
@@ -32,14 +37,16 @@ export const getAllBusinessHacks = async (req, res) => {
       order: [["id", "DESC"]],
     });
 
+    const formatted = convertIdToStringBusiness(campaigns);
+
     res.status(200).json({
       success: true,
-      data: campaigns,
+      data: formatted,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: error.message,
+      message: error.message,
     });
   }
 };
@@ -56,14 +63,18 @@ export const getBusinessHackById = async (req, res) => {
       });
     }
 
+    const formatted = convertIdToStringBusiness(campaign);
+
     res.status(200).json({
-      success: true,
-      data: campaign,
+      response: {
+        success: true,
+        ...formatted,
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: error.message,
+      message: error.message,
     });
   }
 };
@@ -89,15 +100,19 @@ export const updateBusinessHack = async (req, res) => {
 
     await campaign.save();
 
+    const formatted = convertIdToStringBusiness(campaign);
+
     res.status(200).json({
-      success: true,
-      message: "Campaign updated successfully",
-      data: campaign,
+      response: {
+        success: true,
+        message: "Campaign updated successfully",
+        ...formatted,
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: error.message,
+      message: error.message,
     });
   }
 };
@@ -117,13 +132,15 @@ export const deleteBusinessHack = async (req, res) => {
     await campaign.destroy();
 
     res.status(200).json({
-      success: true,
-      message: "Campaign deleted successfully",
+      response: {
+        success: true,
+        message: "Campaign deleted successfully",
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: error.message,
+      message: error.message,
     });
   }
 };

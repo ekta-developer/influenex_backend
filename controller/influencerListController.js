@@ -4,7 +4,8 @@ import Brand from "../models/Brand.js";
 
 export const getInfluencerDashboard = async (req, res) => {
   try {
-    const baseUrl = "http://192.168.1.104:5000/";
+    // const baseUrl = "http://192.168.1.104:5000/";
+      const baseUrl = "http://13.201.88.246"
 
     const influencerList = await InfluencerList.findAll();
     const totalInfluencers = await InfluencerUser.count();

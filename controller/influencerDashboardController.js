@@ -94,6 +94,8 @@ export const getInfluencerDashboard = async (req, res) => {
       ...video,
       thumbnail: video.thumbnail ? `${baseUrl}/${video.thumbnail}` : null,
       video_url: video.video_url ? `${baseUrl}/${video.video_url}` : null,
+      views: video.views !== null ? String(video.views) : "0",
+      likes: video.likes !== null ? String(video.likes) : "0",
     }));
 
     /* ================= SPLIT CAMPAIGNS ================= */
@@ -101,7 +103,7 @@ export const getInfluencerDashboard = async (req, res) => {
     const paidCampaigns = campaignList.filter((c) => c.campaignType === "Paid");
 
     const barterCampaigns = campaignList.filter(
-      (c) => c.campaignType === "Barter"
+      (c) => c.campaignType === "Barter",
     );
 
     /* ================= TOTAL CAMPAIGN ================= */
@@ -119,10 +121,9 @@ export const getInfluencerDashboard = async (req, res) => {
         paid_campaigns: paidCampaigns,
         barter_campaigns: barterCampaigns,
         business_hacks_videos: videoList,
-        inhacks_videos: inhacksList
+        inhacks_videos: inhacksList,
       },
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,

@@ -12,7 +12,6 @@ const InHacks = sequelize.define(
 
     title: {
       type: DataTypes.STRING,
-      allowNull: false,
     },
 
     description: {
@@ -25,7 +24,6 @@ const InHacks = sequelize.define(
 
     video_url: {
       type: DataTypes.STRING,
-      allowNull: false,
     },
 
     uploader: {

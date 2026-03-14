@@ -44,6 +44,13 @@ export const getAllCategories = async (req, res) => {
   try {
     const { influencer_id } = req.params;
 
+    if (!influencer_id) {
+      return res.status(200).json({
+        status: false,
+        message: "Influencer id is required",
+      });
+    }
+
     const categories = await InfluencerCategory.findAll({
       where: { influencer_id },
       order: [["id", "ASC"]],

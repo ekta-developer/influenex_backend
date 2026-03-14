@@ -25,8 +25,7 @@ export const createBusinessHackDetail = async (req, res) => {
       });
     }
 
-    const baseAmount =
-      costPerInfluencer * numberOfInfluencersRequired;
+    const baseAmount = costPerInfluencer * numberOfInfluencersRequired;
 
     const taxAmount = (baseAmount * tax) / 100;
 
@@ -46,18 +45,19 @@ export const createBusinessHackDetail = async (req, res) => {
     });
 
     res.status(201).json({
-      success: true,
-      message: "Business Hack Step-2 created successfully",
-      data: detail,
+      response: {
+        success: true,
+        message: "Business Hack Step-2 created successfully",
+        ...detail.dataValues,
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: error.message,
+      message: error.message,
     });
   }
 };
-
 
 // ✅ GET ALL
 export const getAllBusinessHackDetails = async (req, res) => {
@@ -74,11 +74,10 @@ export const getAllBusinessHackDetails = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: error.message,
+      message: error.message,
     });
   }
 };
-
 
 // ✅ GET SINGLE
 export const getBusinessHackDetailById = async (req, res) => {
@@ -101,11 +100,10 @@ export const getBusinessHackDetailById = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: error.message,
+      message: error.message,
     });
   }
 };
-
 
 // ✅ UPDATE
 export const updateBusinessHackDetail = async (req, res) => {
@@ -133,8 +131,7 @@ export const updateBusinessHackDetail = async (req, res) => {
     const updatedInfluencers =
       numberOfInfluencersRequired ?? detail.numberOfInfluencersRequired;
 
-    const updatedCPI =
-      costPerInfluencer ?? detail.costPerInfluencer;
+    const updatedCPI = costPerInfluencer ?? detail.costPerInfluencer;
 
     const updatedTax = tax ?? detail.tax;
 
@@ -167,7 +164,6 @@ export const updateBusinessHackDetail = async (req, res) => {
     });
   }
 };
-
 
 // ✅ DELETE
 export const deleteBusinessHackDetail = async (req, res) => {
