@@ -6,17 +6,17 @@ import {
   updateReferral,
   deleteReferral,
 } from "../controller/referralController.js";
-
+import { verifyToken } from "../middleware/AuthMiddleware.js";
 const router = express.Router();
 
-router.post("/create", createReferral);
+router.post("/create",verifyToken, createReferral);
 
-router.get("/all", getAllReferrals);
+router.get("/all",verifyToken, getAllReferrals);
 
-router.get("/:id", getReferralById);
+router.get("/:id",verifyToken, getReferralById);
 
-router.put("/update/:id", updateReferral);
+router.put("/update/:id",verifyToken, updateReferral);
 
-router.delete("/delete/:id", deleteReferral);
+router.delete("/delete/:id",verifyToken, deleteReferral);
 
 export default router;

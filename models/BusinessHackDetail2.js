@@ -16,13 +16,29 @@ const BusinessHackStep3 = sequelize.define(
     },
 
     influencerCategory: {
-      type: DataTypes.STRING,
+      type: DataTypes.JSONB,
       allowNull: false,
     },
 
     gender: {
-      type: DataTypes.ENUM("Male", "Female", "Other", "All"),
+      type: DataTypes.ARRAY(DataTypes.STRING),
       allowNull: false,
+      validate: {
+        isArray(value) {
+          if (!Array.isArray(value)) {
+            throw new Error("Gender must be an array");
+          }
+        },
+        validValues(value) {
+          const allowed = ["Male", "Female", "Other", "All"];
+
+          value.forEach((v) => {
+            if (!allowed.includes(v)) {
+              throw new Error(`Invalid gender: ${v}`);
+            }
+          });
+        },
+      },
     },
 
     minAge: {
@@ -40,14 +56,16 @@ const BusinessHackStep3 = sequelize.define(
       allowNull: false,
     },
 
+    // ✅ Store array of strings
     dos: {
-      type: DataTypes.TEXT,
+      type: DataTypes.JSONB,
+      allowNull: true,
     },
 
     donts: {
-      type: DataTypes.TEXT,
+      type: DataTypes.JSONB,
+      allowNull: true,
     },
-
     isDosRequired: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
@@ -61,7 +79,7 @@ const BusinessHackStep3 = sequelize.define(
   {
     tableName: "business_hack_step3",
     timestamps: true,
-  }
+  },
 );
 
 // Association

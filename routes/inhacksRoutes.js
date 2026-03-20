@@ -8,6 +8,7 @@ import {
   updateInhack,
   deleteInhack,
 } from "../controller/inhacksController.js";
+import { verifyToken } from "../middleware/AuthMiddleware.js";
 
 const router = express.Router();
 
@@ -17,11 +18,12 @@ router.post(
     { name: "thumbnail", maxCount: 1 },
     { name: "video", maxCount: 1 },
   ]),
+  verifyToken,
   createInhack,
 );
 
-router.get("/list", getAllInhacks);
-router.get("/:id", getSingleInhack);
+router.get("/list", verifyToken, getAllInhacks);
+router.get("/:id", verifyToken, getSingleInhack);
 
 router.put(
   "/update/:id",
@@ -29,9 +31,10 @@ router.put(
     { name: "thumbnail", maxCount: 1 },
     { name: "video", maxCount: 1 },
   ]),
+  verifyToken,
   updateInhack,
 );
 
-router.delete("/delete/:id", deleteInhack);
+router.delete("/delete/:id", verifyToken, deleteInhack);
 
 export default router;

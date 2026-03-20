@@ -1,26 +1,52 @@
 import BusinessHacks from "../models/BusinessHacksVideo.js";
 
+// const BASE_URL = "http://localhost:5000/";
+const baseUrl = "http://13.201.88.246";
+
+const imagePath = "uploads/BusinessHacksMedia/thumbnails";
+const videoPath = "uploads/BusinessHacksMedia/videos";
+
+// Convert file name to full URL
+const convertMediaUrl = (data) => {
+  if (!data) return data;
+
+  const item = data.toJSON ? data.toJSON() : data;
+
+  return {
+    ...item,
+    thumbnail: item.thumbnail
+      ? BASE_URL + imagePath + "/" + item.thumbnail
+      : null,
+    video: item.video ? BASE_URL + videoPath + "/" + item.video : null,
+  };
+};
 
 // ===============================
 // CREATE Business Hack
 // ===============================
 export const createBusinessHack = async (req, res) => {
   try {
-    const {
-      title,
-      description,
-      thumbnail,
-      video_url,
-      uploader,
-      duration,
-      views,
-      likes,
-    } = req.body;
+    const { title, description, uploader, duration } = req.body;
 
-    if (!title || !video_url) {
+    if (!title) {
       return res.status(400).json({
         status: false,
-        message: "Title and Video URL are required",
+        message: "Title is required",
+      });
+    }
+
+    const thumbnail = req.files?.thumbnail
+      ? req.files.thumbnail[0].filename
+      : null;
+
+    const video = req.files?.video
+      ? req.files.video[0].filename
+      : null;
+
+    if (!video) {
+      return res.status(400).json({
+        status: false,
+        message: "Video file is required",
       });
     }
 
@@ -28,18 +54,17 @@ export const createBusinessHack = async (req, res) => {
       title,
       description,
       thumbnail,
-      video_url,
+      video,
       uploader,
       duration,
-      views,
-      likes,
     });
 
     res.status(201).json({
       status: true,
       message: "Business Hack created successfully",
-      data: hack,
+      data: convertMediaUrl(hack),
     });
+
   } catch (error) {
     res.status(500).json({
       status: false,
@@ -47,7 +72,6 @@ export const createBusinessHack = async (req, res) => {
     });
   }
 };
-
 
 // ===============================
 // GET All Business Hacks
@@ -58,10 +82,13 @@ export const getAllBusinessHacks = async (req, res) => {
       order: [["created_at", "DESC"]],
     });
 
+    const formatted = hacks.map((hack) => convertMediaUrl(hack));
+
     res.json({
       status: true,
-      data: hacks,
+      data: formatted,
     });
+
   } catch (error) {
     res.status(500).json({
       status: false,
@@ -69,8 +96,6 @@ export const getAllBusinessHacks = async (req, res) => {
     });
   }
 };
-
-
 // ===============================
 // GET Single Business Hack
 // ===============================
@@ -89,8 +114,9 @@ export const getBusinessHackById = async (req, res) => {
 
     res.json({
       status: true,
-      data: hack,
+      data: convertMediaUrl(hack),
     });
+
   } catch (error) {
     res.status(500).json({
       status: false,
@@ -98,7 +124,6 @@ export const getBusinessHackById = async (req, res) => {
     });
   }
 };
-
 
 // ===============================
 // UPDATE Business Hack
@@ -116,7 +141,40 @@ export const updateBusinessHack = async (req, res) => {
       });
     }
 
-    await hack.update(req.body);
+    let thumbnail = hack.thumbnail;
+    let video = hack.video;
+
+    // Update thumbnail
+    if (req.files?.thumbnail) {
+      if (hack.thumbnail) {
+        const oldThumb = path.join("uploads/thumbnails", hack.thumbnail);
+
+        if (fs.existsSync(oldThumb)) {
+          fs.unlinkSync(oldThumb);
+        }
+      }
+
+      thumbnail = req.files.thumbnail[0].filename;
+    }
+
+    // Update video
+    if (req.files?.video) {
+      if (hack.video) {
+        const oldVideo = path.join("uploads/videos", hack.video);
+
+        if (fs.existsSync(oldVideo)) {
+          fs.unlinkSync(oldVideo);
+        }
+      }
+
+      video = req.files.video[0].filename;
+    }
+
+    await hack.update({
+      ...req.body,
+      thumbnail,
+      video,
+    });
 
     res.json({
       status: true,
@@ -130,7 +188,6 @@ export const updateBusinessHack = async (req, res) => {
     });
   }
 };
-
 
 // ===============================
 // DELETE Business Hack
@@ -146,6 +203,24 @@ export const deleteBusinessHack = async (req, res) => {
         status: false,
         message: "Business Hack not found",
       });
+    }
+
+    // Delete thumbnail
+    if (hack.thumbnail) {
+      const thumbPath = path.join("uploads/thumbnails", hack.thumbnail);
+
+      if (fs.existsSync(thumbPath)) {
+        fs.unlinkSync(thumbPath);
+      }
+    }
+
+    // Delete video
+    if (hack.video) {
+      const videoPath = path.join("uploads/videos", hack.video);
+
+      if (fs.existsSync(videoPath)) {
+        fs.unlinkSync(videoPath);
+      }
     }
 
     await hack.destroy();

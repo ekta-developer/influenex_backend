@@ -1,22 +1,38 @@
 import express from "express";
 import {
   createBusinessHack,
+  updateBusinessHack,
   getAllBusinessHacks,
   getBusinessHackById,
-  updateBusinessHack,
   deleteBusinessHack,
 } from "../controller/businessHacksVideoController.js";
 
+import { uploadBusinessHack } from "../middleware/uploadBusinessHacksMedia.js";
+
 const router = express.Router();
 
-router.post("/create", createBusinessHack);
+router.post(
+  "/create",
+  uploadBusinessHack.fields([
+    { name: "thumbnail", maxCount: 1 },
+    { name: "video", maxCount: 1 },
+  ]),
+  createBusinessHack,
+);
 
-router.get("/all", getAllBusinessHacks);
+router.put(
+  "/update/:id",
+  uploadBusinessHack.fields([
+    { name: "thumbnail", maxCount: 1 },
+    { name: "video", maxCount: 1 },
+  ]),
+  updateBusinessHack,
+);
 
-router.get("/:id", getBusinessHackById);
+router.get("/videos", getAllBusinessHacks);
 
-router.put("/update/:id", updateBusinessHack);
+router.get("/video/:id", getBusinessHackById);
 
-router.delete("/delete/:id", deleteBusinessHack);
+router.delete("/video/:id", deleteBusinessHack);
 
 export default router;

@@ -3,6 +3,7 @@ import { getAllBusinessTypes } from "../controller/businessTypeController.js";
 
 const router = express.Router();
 
+
 // GET API
 router.get("/business-types", getAllBusinessTypes);
 

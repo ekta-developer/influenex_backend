@@ -1,54 +1,64 @@
-  import { DataTypes } from "sequelize";
-  import sequelize from "../config/database.js";
+import { DataTypes } from "sequelize";
+import sequelize from "../config/database.js";
 
-  const BusinessRegistration = sequelize.define(
-    "BusinessRegistration",
-    {
-      businessName: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
-      },
+const BusinessRegistration = sequelize.define(
+  "BusinessRegistration",
+  {
+    uuid: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      unique: true,
+    },
 
-      mobileNumber: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-        validate: {
-          notEmpty: true,
-          len: [10, 15],
-        },
-      },
+    businessName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
 
-      city: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
-      },
+    mobileNumber: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
 
-      businessType: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-          notEmpty: true,
-        },
-      },
+    city: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
 
-      gstNumber: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        unique: true,
+    businessType: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+
+    gstNumber: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true,
+    },
+    business_user_id: {
+      type: DataTypes.UUID, // or STRING
+      allowNull: true,
+    },
+    refreshToken: {
+      type: DataTypes.JSON, // or ARRAY
+      allowNull: true,
+      defaultValue: [],
+    },
+  },
+  {
+    tableName: "business_registration",
+    freezeTableName: true,
+    timestamps: true,
+
+    hooks: {
+      beforeCreate: (business, options) => {
+        if (options.userId) {
+          business.business_user_id = options.userId;
+        }
       },
     },
-    {
-      tableName: "business_registration",
-      freezeTableName: true,
-      timestamps: true,
-    },
-  );
+  },
+);
 
-  export default BusinessRegistration;
+export default BusinessRegistration;

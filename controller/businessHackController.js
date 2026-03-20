@@ -6,21 +6,17 @@ export const createBusinessHack = async (req, res) => {
   try {
     const { campaignName, state, city, campaignType } = req.body;
 
-    const newCampaign = await BusinessHack.create({
+    const businessHack = await BusinessHack.create({
+      user_id: req.user.userId, // FIXED HERE
       campaignName,
       state,
       city,
       campaignType,
     });
-
-    const formatted = convertIdToStringBusiness(newCampaign);
-
     res.status(201).json({
-      response: {
-        success: true,
-        message: "Campaign created successfully",
-        ...formatted,
-      },
+      success: true,
+      message: "Business Hack created successfully",
+      data: businessHack,
     });
   } catch (error) {
     res.status(500).json({

@@ -1,61 +1,43 @@
 import { convertToString } from "../HelperFunction/Helper.js";
 import Influencer from "../models/InfluencerUser.js";
 import BusinessRegistration from "../models/Business.js";
+import { v4 as uuidv4 } from "uuid";
 
-// ✅ CREATE Business
+// ✅ CREATE
 export const createBusiness = async (req, res) => {
   try {
-    const { mobileNumber } = req.body;
-
-    if (!mobileNumber) {
-      return res.status(200).json({
-        success: false,
-        message: "Mobile number is required",
-        data: null,
-      });
-    }
-
-    // 🔹 Check in InfluencerUser table
-    const influencerUser = await Influencer.findOne({
-      where: { mobileNumber },
-    });
-
-    if (influencerUser) {
-      return res.status(200).json({
-        success: false,
-        message: "Number already registered with influencer user",
-        data: null,
-      });
-    }
-
-    // 🔹 Check in BusinessRegistration table
-    const businessRegistration = await BusinessRegistration.findOne({
-      where: { mobileNumber },
-    });
-
-    if (businessRegistration) {
-      return res.status(200).json({
-        success: false,
-        message: "Number already registered with business registration",
-        data: null,
-      });
-    }
-
-    // 🔹 Convert empty GST to null
     const payload = {
       ...req.body,
       gstNumber: req.body.gstNumber || null,
     };
 
-    // 🔹 Create Business
-    const business = await Business.create(payload);
+    const business = await BusinessRegistration.create(payload);
 
     return res.status(200).json({
       success: true,
       message: "Business registered successfully",
       data: convertToString(business.toJSON()),
     });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+// ✅ GET ALL Businesses (Only Logged-in User)
+export const getAllBusinesses = async (req, res) => {
+  try {
+    const businesses = await BusinessRegistration.findAll({
+      // where: { business_user_id: req.user.userId },
+      where: { business_user_id: req.user.uuid },
+    });
 
+    return res.status(200).json({
+      success: true,
+      message:"Business User data fetched successfully!",
+      data: convertToString(businesses.map((b) => b.toJSON())),
+    });
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -64,29 +46,18 @@ export const createBusiness = async (req, res) => {
   }
 };
 
-// ✅ GET ALL Businesses
-export const getAllBusinesses = async (req, res) => {
+// ✅ GET Single Business (by UUID)
+export const getBusinessByUUID = async (req, res) => {
   try {
-    const businesses = await Business.findAll();
+    const { uuid } = req.params;
 
-    return res.status(200).json({
-      success: true,
-      data: convertToString(businesses.map((b) => b.toJSON())),
+    const business = await BusinessRegistration.findOne({
+      where: {
+        uuid,
+        // business_user_id: req.user.userId,
+        business_user_id: req.user.uuid,
+      },
     });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
-};
-
-// ✅ GET Single Business
-export const getBusinessById = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const business = await Business.findByPk(id);
 
     if (!business) {
       return res.status(404).json({
@@ -102,17 +73,23 @@ export const getBusinessById = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      error: error.message,
+      message: error.message,
     });
   }
 };
 
-// ✅ UPDATE Business
+// ✅ UPDATE Business (by UUID)
 export const updateBusiness = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { uuid } = req.params;
 
-    const business = await Business.findByPk(id);
+    const business = await BusinessRegistration.findOne({
+      where: {
+        uuid,
+        // business_user_id: req.user.userId,
+        business_user_id: req.user.uuid,
+      },
+    });
 
     if (!business) {
       return res.status(404).json({
@@ -136,12 +113,18 @@ export const updateBusiness = async (req, res) => {
   }
 };
 
-// ✅ DELETE Business
+// ✅ DELETE Business (by UUID)
 export const deleteBusiness = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { uuid } = req.params;
 
-    const business = await Business.findByPk(id);
+    const business = await BusinessRegistration.findOne({
+      where: {
+        uuid,
+        // business_user_id: req.user.userId,
+        business_user_id: req.user.uuid,
+      },
+    });
 
     if (!business) {
       return res.status(404).json({

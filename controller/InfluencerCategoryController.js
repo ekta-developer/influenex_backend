@@ -42,23 +42,22 @@ export const createCategory = async (req, res) => {
 // ✅ GET All Categories
 export const getAllCategories = async (req, res) => {
   try {
-    const { influencer_id } = req.params;
-
-    if (!influencer_id) {
-      return res.status(200).json({
-        status: false,
-        message: "Influencer id is required",
-      });
-    }
-
     const categories = await InfluencerCategory.findAll({
-      where: { influencer_id },
+      attributes: ["id", "categoryName"],
       order: [["id", "ASC"]],
     });
 
+    const formattedCategories = categories.map((item) => ({
+      ...item.dataValues,
+      id: String(item.dataValues.id), // convert id to string
+    }));
+
     return res.status(200).json({
-      status: true,
-      data: categories,
+      response: {
+        status: true,
+        message: "Categories data fetched successfully!",
+        influCategory: formattedCategories,
+      },
     });
   } catch (error) {
     return res.status(500).json({

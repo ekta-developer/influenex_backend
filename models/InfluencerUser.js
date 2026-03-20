@@ -7,38 +7,43 @@ const InfluencerUser = sequelize.define(
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
-      primaryKey: true
+      primaryKey: true,
     },
     fullName: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
     },
     mobileNumber: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true
+      unique: true,
     },
     email: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true
+      unique: true,
     },
     dob: {
       type: DataTypes.DATEONLY,
-      allowNull: false
+      allowNull: false,
     },
     city: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
     },
     gender: {
-      type: DataTypes.STRING
-    }
+      type: DataTypes.STRING,
+    },
+    refreshToken: {
+      type: DataTypes.JSON, // or ARRAY
+      allowNull: true,
+      defaultValue: [],
+    },
   },
   {
     tableName: "influencersUser",
-    timestamps: true
-  }
+    timestamps: true,
+  },
 );
 
 export default InfluencerUser;

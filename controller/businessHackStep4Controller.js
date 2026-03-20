@@ -2,47 +2,22 @@ import BusinessHackStep4 from "../models/BusinessHackStep4.js";
 import BusinessHack from "../models/BusinessHacks.js";
 import multer from "multer";
 import fs from "fs";
-import path from "path";
-import { response } from "express";
 
-// Ensure folders exist
-const campaignDir = "uploads/campaign-images";
-const sampleDir = "uploads/sample-media";
-
-if (!fs.existsSync(campaignDir)) {
-  fs.mkdirSync(campaignDir, { recursive: true });
-}
-
-if (!fs.existsSync(sampleDir)) {
-  fs.mkdirSync(sampleDir, { recursive: true });
-}
-
-// Storage Config
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    if (file.fieldname === "campaignImage") {
-      cb(null, campaignDir);
-    } else if (file.fieldname === "sampleMedia") {
-      cb(null, sampleDir);
+// helper (safe delete)
+const safeDelete = (filePath) => {
+  try {
+    if (filePath && fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
     }
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
-});
-
-export const uploadMedia = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-}).fields([
-  { name: "campaignImage", maxCount: 1 },
-  { name: "sampleMedia", maxCount: 10 },
-]);
+  } catch (err) {
+    console.log("Delete error:", err.message);
+  }
+};
 
 // ✅ CREATE
 export const createBusinessHackStep4 = async (req, res) => {
   try {
-    const businessHackId = parseInt(req.body?.businessHackId);
+    const businessHackId = parseInt(req.body.businessHackId);
 
     if (!businessHackId) {
       return res.status(400).json({
@@ -79,12 +54,14 @@ export const createBusinessHackStep4 = async (req, res) => {
       message: "Step-4 Media uploaded successfully",
       data: step4,
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
+  }catch (error) {
+  console.error("🔥 ERROR:", error); // ADD THIS
+
+  res.status(500).json({
+    success: false,
+    message: error.message, // send real error
+  });
+}
 };
 
 // ✅ GET ALL
@@ -117,31 +94,23 @@ export const updateBusinessHackStep4 = async (req, res) => {
       });
     }
 
-    // Delete old files if new uploaded
     if (req.files?.campaignImage && step4.campaignImage) {
-      if (fs.existsSync(step4.campaignImage)) {
-        fs.unlinkSync(step4.campaignImage);
-      }
+      safeDelete(step4.campaignImage);
       step4.campaignImage = req.files.campaignImage[0].path;
     }
 
     if (req.files?.sampleMedia) {
-      // delete old sample media
       if (step4.sampleMedia) {
-        step4.sampleMedia.forEach((file) => {
-          if (fs.existsSync(file)) {
-            fs.unlinkSync(file);
-          }
-        });
+        step4.sampleMedia.forEach(safeDelete);
       }
-      step4.sampleMedia = req.files.sampleMedia.map((file) => file.path);
+      step4.sampleMedia = req.files.sampleMedia.map((f) => f.path);
     }
 
     await step4.save();
 
     res.status(200).json({
       success: true,
-      message: "Step-4 Media updated successfully",
+      message: "Updated successfully",
       data: step4,
     });
   } catch (error) {

@@ -73,3 +73,22 @@ export const convertIdToStringBusiness = (list) => {
     id: String(list.dataValues.id),
   };
 };
+
+
+export const normalizeGender = (gender) => {
+  const allowed = ["Male", "Female", "Other", "All"];
+
+  // If already array
+  if (Array.isArray(gender)) {
+    return gender.filter((g) => allowed.includes(g));
+  }
+
+  // If object (checkbox case)
+  if (typeof gender === "object" && gender !== null) {
+    return Object.keys(gender).filter(
+      (key) => gender[key] === true && allowed.includes(key)
+    );
+  }
+
+  return [];
+};

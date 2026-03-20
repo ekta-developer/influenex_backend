@@ -1,16 +1,39 @@
 import Otp from "../models/Otp.js";
 import BusinessRegistration from "../models/Business.js";
 import InfluencerUser from "../models/InfluencerUser.js";
-import jwt from "jsonwebtoken";
-
-const JWT_SECRET = process.env.JWT_SECRET || "yourSecretKey";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../HelperFunction/Tokens.js";
 
 /* =========================
-   Generate Random 6 Digit OTP
+   COMMON: FIND USER BY PHONE
 ========================= */
-const generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+const findUserByPhone = async (phone) => {
+  let user = await BusinessRegistration.findOne({
+    where: { mobileNumber: phone },
+  });
+
+  if (user) {
+    return { user, userType: "business" };
+  }
+
+  user = await InfluencerUser.findOne({
+    where: { mobileNumber: phone },
+  });
+
+  if (user) {
+    return { user, userType: "influencer" };
+  }
+
+  return { user: null, userType: null };
 };
+
+/* =========================
+   Generate Random OTP
+========================= */
+const generateOTP = () =>
+  Math.floor(100000 + Math.random() * 900000).toString();
 
 /* =========================
    SEND OTP
@@ -20,32 +43,26 @@ export const sendOtp = async (req, res) => {
     const { phone } = req.body;
 
     if (!phone) {
-      return res.status(200).json({
+      return res.status(400).json({
         status: false,
         message: "Phone number is required",
       });
     }
 
-    // Check phone in BOTH tables
-    const business = await BusinessRegistration.findOne({
-      where: { mobileNumber: phone },
-    });
+    const { user } = await findUserByPhone(phone);
 
-    const influencer = await InfluencerUser.findOne({
-      where: { mobileNumber: phone },
-    });
-
-    if (!business && !influencer) {
-      return res.status(200).json({
+    if (!user) {
+      return res.status(400).json({
         status: false,
         message: "Mobile number is not registered",
       });
     }
 
-    // Generate OTP
-    const otp = generateOTP();
+    // ✅ Delete old OTPs
+    await Otp.destroy({ where: { phone } });
 
-    const expiresAt = new Date(Date.now() + 60 * 1000);
+    const otp = generateOTP();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
     await Otp.create({
       phone,
@@ -57,16 +74,18 @@ export const sendOtp = async (req, res) => {
     return res.status(200).json({
       status: true,
       message: "OTP sent successfully",
-      otp: otp, // remove in production
-      expiresAt: expiresAt,
+      // ❌ remove in production
+      otp,
+      expiresAt,
     });
   } catch (error) {
-    return res.status(200).json({
+    return res.status(500).json({
       status: false,
       message: error.message || "Failed to send OTP",
     });
   }
 };
+
 /* =========================
    VERIFY OTP
 ========================= */
@@ -93,6 +112,13 @@ export const verifyOtp = async (req, res) => {
       });
     }
 
+    if (record.is_verified) {
+      return res.status(400).json({
+        status: false,
+        message: "OTP already used",
+      });
+    }
+
     if (new Date() > record.expires_at) {
       return res.status(400).json({
         status: false,
@@ -107,27 +133,87 @@ export const verifyOtp = async (req, res) => {
       });
     }
 
+    // ✅ mark verified
     record.is_verified = true;
     await record.save();
 
-    const token = jwt.sign(
-      {
-        phone,
-        otpVerified: true,
-      },
-      JWT_SECRET,
-      { expiresIn: "1m" },
-    );
+    // ✅ delete OTP after use
+    await record.destroy();
 
-    res.json({
-      status: true,
-      message: "OTP verified successfully",
-      token: token,
+    const { user, userType } = await findUserByPhone(phone);
+
+    if (!user) {
+      return res.status(400).json({
+        status: false,
+        message: "User not found",
+      });
+    }
+
+    const payload = {
+      phone,
+      userId: user.id,
+      uuid: user.uuid,
+      userType,
+    };
+
+    const accessToken = generateAccessToken(payload);
+    const refreshToken = generateRefreshToken(payload);
+
+    // ✅ Save refresh token
+    await user.update({ refreshToken });
+
+    return res.json({
+      success: true,
+      message: "Login successful",
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id.toString(),
+        uuid: user.uuid,
+        type: userType,
+      },
     });
+
   } catch (error) {
-    res.status(500).json({
+    console.log("VERIFY OTP ERROR:", error);
+
+    return res.status(500).json({
       status: false,
       message: error.message || "OTP verification failed",
+    });
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    const { userId, userType } = req.user;
+
+    let user;
+
+    if (userType === "business") {
+      user = await BusinessRegistration.findByPk(userId);
+    } else {
+      user = await InfluencerUser.findByPk(userId);
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // ❌ Remove refresh token
+    await user.update({ refreshToken: null });
+
+    return res.json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
     });
   }
 };

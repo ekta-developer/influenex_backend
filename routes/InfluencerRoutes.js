@@ -7,12 +7,13 @@ import {
   deleteInfluencer,
 } from "../controller/InfluencerControllers.js";
 import {upload} from "../middleware/upload.js"
+import { verifyToken } from "../middleware/AuthMiddleware.js";
 const router = express.Router();
 
-router.post("/create", upload.single("profilePhoto"), createInfluencer);
-router.get("/", getAllInfluencers);
-router.get("/:id", getInfluencerById);
-router.put("/:id", updateInfluencer);
-router.delete("/:id", deleteInfluencer);
+router.post("/create", upload.single("profilePhoto"),verifyToken, createInfluencer);
+router.get("/", verifyToken,getAllInfluencers);
+router.get("/:id",verifyToken, getInfluencerById);
+router.put("/:id", upload.single('profilePhoto'),verifyToken, updateInfluencer);
+router.delete("/:id",verifyToken, deleteInfluencer);
 
 export default router;

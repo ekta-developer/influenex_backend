@@ -2,7 +2,8 @@ import Influencer from "../models/influencer.js";
 import sequelize from "../config/database.js";
 import slugify from "slugify";
 import { convertToString } from "../HelperFunction/Helper.js";
-
+import path from "path";
+import fs from "fs";
 export const createInfluencer = async (req, res) => {
   const transaction = await sequelize.transaction();
 

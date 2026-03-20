@@ -1,10 +1,21 @@
+import { normalizeGender } from "../HelperFunction/Helper.js";
 import BusinessHackStep3 from "../models/BusinessHackDetail2.js";
 import BusinessHack from "../models/BusinessHacks.js";
+
+// helper to convert string → array
+const normalizeArray = (value) => {
+  if (!value) return null;
+  if (Array.isArray(value)) return value;
+  if (typeof value === "string") {
+    return value.split(",").map((v) => v.trim());
+  }
+  return null;
+};
 
 // ✅ CREATE
 export const createBusinessHackStep3 = async (req, res) => {
   try {
-    const {
+    let {
       businessHackId,
       influencerCategory,
       gender,
@@ -17,7 +28,17 @@ export const createBusinessHackStep3 = async (req, res) => {
       isDontsRequired,
     } = req.body;
 
-    // Validate age range
+    dos = normalizeArray(dos);
+    donts = normalizeArray(donts);
+    gender = normalizeGender(gender); // ✅ FIXED
+
+    if (!gender || gender.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one gender must be selected",
+      });
+    }
+
     if (minAge >= maxAge) {
       return res.status(400).json({
         success: false,
@@ -25,8 +46,22 @@ export const createBusinessHackStep3 = async (req, res) => {
       });
     }
 
-    // Check Step-1 exists
+    if (isDosRequired && (!dos || dos.length === 0)) {
+      return res.status(400).json({
+        success: false,
+        message: "Dos list is required",
+      });
+    }
+
+    if (isDontsRequired && (!donts || donts.length === 0)) {
+      return res.status(400).json({
+        success: false,
+        message: "Donts list is required",
+      });
+    }
+
     const campaign = await BusinessHack.findByPk(businessHackId);
+
     if (!campaign) {
       return res.status(404).json({
         success: false,
@@ -51,7 +86,7 @@ export const createBusinessHackStep3 = async (req, res) => {
       response: {
         success: true,
         message: "Business Hack Step-3 created successfully",
-        ...step3.dataValues,
+        data: step3,
       },
     });
   } catch (error) {
@@ -61,12 +96,14 @@ export const createBusinessHackStep3 = async (req, res) => {
     });
   }
 };
-
 // ✅ GET ALL
 export const getAllBusinessHackStep3 = async (req, res) => {
   try {
     const data = await BusinessHackStep3.findAll({
-      include: BusinessHack,
+      include: {
+        model: BusinessHack,
+        attributes: ["id", "businessName"],
+      },
       order: [["id", "DESC"]],
     });
 
@@ -86,7 +123,10 @@ export const getAllBusinessHackStep3 = async (req, res) => {
 export const getBusinessHackStep3ById = async (req, res) => {
   try {
     const data = await BusinessHackStep3.findByPk(req.params.id, {
-      include: BusinessHack,
+      include: {
+        model: BusinessHack,
+        attributes: ["id", "businessName"],
+      },
     });
 
     if (!data) {
@@ -120,7 +160,7 @@ export const updateBusinessHackStep3 = async (req, res) => {
       });
     }
 
-    const {
+    let {
       influencerCategory,
       gender,
       minAge,
@@ -131,6 +171,22 @@ export const updateBusinessHackStep3 = async (req, res) => {
       isDosRequired,
       isDontsRequired,
     } = req.body;
+
+    dos = normalizeArray(dos) ?? step3.dos;
+    donts = normalizeArray(donts) ?? step3.donts;
+
+    // ✅ Normalize gender only if provided
+    let updatedGender = step3.gender;
+    if (gender !== undefined) {
+      updatedGender = normalizeGender(gender);
+
+      if (!updatedGender || updatedGender.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "At least one valid gender must be selected",
+        });
+      }
+    }
 
     const updatedMinAge = minAge ?? step3.minAge;
     const updatedMaxAge = maxAge ?? step3.maxAge;
@@ -143,13 +199,13 @@ export const updateBusinessHackStep3 = async (req, res) => {
     }
 
     step3.influencerCategory = influencerCategory ?? step3.influencerCategory;
-    step3.gender = gender ?? step3.gender;
+    step3.gender = updatedGender; // ✅ FIXED
     step3.minAge = updatedMinAge;
     step3.maxAge = updatedMaxAge;
     step3.campaignDescription =
       campaignDescription ?? step3.campaignDescription;
-    step3.dos = dos ?? step3.dos;
-    step3.donts = donts ?? step3.donts;
+    step3.dos = dos;
+    step3.donts = donts;
     step3.isDosRequired = isDosRequired ?? step3.isDosRequired;
     step3.isDontsRequired = isDontsRequired ?? step3.isDontsRequired;
 
@@ -167,7 +223,6 @@ export const updateBusinessHackStep3 = async (req, res) => {
     });
   }
 };
-
 // ✅ DELETE
 export const deleteBusinessHackStep3 = async (req, res) => {
   try {

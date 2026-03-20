@@ -1,7 +1,8 @@
 import { convertIdToStringHacks } from "../HelperFunction/Helper.js";
 import InHacks from "../models/InHacks.js";
 
-const baseUrl = "http://192.168.1.104:5000/";
+// const baseUrl = "http://192.168.1.104:5000/";
+   const baseUrl = "13.201.88.246";
 
 // CREATE VIDEO
 export const createInhack = async (req, res) => {

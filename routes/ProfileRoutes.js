@@ -7,22 +7,23 @@ import {
   updateProfile,
   deleteProfile,
 } from "../controller/ProfileController.js";
+import { verifyToken } from "../middleware/AuthMiddleware.js";
 
 const router = express.Router();
 
 // Create Profile
-router.post("/", upload.single("profileImage"), createProfile);
+router.post("/", upload.single("profileImage"), verifyToken, createProfile);
 
 // Get All
-router.get("/", getAllProfiles);
+router.get("/",verifyToken, getAllProfiles);
 
 // Get By ID
-router.get("/:id", getProfileById);
+router.get("/:id",verifyToken, getProfileById);
 
 // Update
-router.put("/:id", upload.single("profileImage"), updateProfile);
+router.put("/:id", upload.single("profileImage"),verifyToken, updateProfile);
 
 // Delete
-router.delete("/:id", deleteProfile);
+router.delete("/:id",verifyToken, deleteProfile);
 
 export default router;

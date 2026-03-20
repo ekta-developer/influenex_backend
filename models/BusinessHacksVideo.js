@@ -6,34 +6,34 @@ const BusinessHacks = sequelize.define(
   {
     id: {
       type: DataTypes.INTEGER,
-      autoIncrement: true,
       primaryKey: true,
+      autoIncrement: true,
+      allowNull: false,
     },
 
     title: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-
     description: {
       type: DataTypes.TEXT,
     },
 
     thumbnail: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(255),
     },
 
-    video_url: {
-      type: DataTypes.STRING,
-      allowNull: false,
+    video: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
     },
 
     uploader: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(100),
     },
 
     duration: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(20),
     },
 
     views: {
@@ -51,7 +51,7 @@ const BusinessHacks = sequelize.define(
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
-  }
+  },
 );
 
 export default BusinessHacks;

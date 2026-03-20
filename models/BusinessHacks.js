@@ -4,6 +4,10 @@ import sequelize from "../config/database.js";
 const BusinessHack = sequelize.define(
   "BusinessHack",
   {
+    user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     campaignName: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -27,7 +31,7 @@ const BusinessHack = sequelize.define(
   {
     tableName: "business_hacks",
     timestamps: true,
-  }
+  },
 );
 
 export default BusinessHack;

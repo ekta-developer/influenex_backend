@@ -7,13 +7,14 @@ import {
   deleteBrand,
   uploadLogo,
 } from "../controller/BrandController.js";
+import { verifyToken } from "../middleware/AuthMiddleware.js";
 
 const router = express.Router();
 
-router.post("/", uploadLogo, createBrand);
-router.get("/", getAllBrands);
-router.get("/:id", getBrandById);
-router.put("/:id", uploadLogo, updateBrand);
-router.delete("/:id", deleteBrand);
+router.post("/",verifyToken, uploadLogo, createBrand);
+router.get("/",verifyToken, getAllBrands);
+router.get("/:id",verifyToken, getBrandById);
+router.put("/:id",verifyToken, uploadLogo, updateBrand);
+router.delete("/:id",verifyToken, deleteBrand);
 
 export default router;
