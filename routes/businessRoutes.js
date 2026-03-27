@@ -2,17 +2,16 @@ import express from "express";
 import {
   createBusiness,
   getAllBusinesses,
+  getBusinessByUUID,
   updateBusiness,
   deleteBusiness,
-  getBusinessByUUID,
-} from "../controller/businessController.js";
-import { verifyToken } from "../middleware/AuthMiddleware.js";
+} from "../controller/businessController.js"
 const router = express.Router();
 
 router.post("/register", createBusiness);
-router.get("/",verifyToken, getAllBusinesses);
-router.get("/:uuid",verifyToken, getBusinessByUUID);
-router.put("/:uuid",verifyToken, updateBusiness);
-router.delete("/:uuid",verifyToken, deleteBusiness);
+router.get("/", getAllBusinesses);
+router.get("/:id", getBusinessByUUID);
+router.put("/:id", updateBusiness);
+router.delete("/:id", deleteBusiness);
 
 export default router;

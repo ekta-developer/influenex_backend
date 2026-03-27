@@ -14,17 +14,13 @@ const findUserByPhone = async (phone) => {
     where: { mobileNumber: phone },
   });
 
-  if (user) {
-    return { user, userType: "business" };
-  }
+  if (user) return { user, userType: "business" };
 
   user = await InfluencerUser.findOne({
     where: { mobileNumber: phone },
   });
 
-  if (user) {
-    return { user, userType: "influencer" };
-  }
+  if (user) return { user, userType: "influencer" };
 
   return { user: null, userType: null };
 };
@@ -173,7 +169,6 @@ export const verifyOtp = async (req, res) => {
         type: userType,
       },
     });
-
   } catch (error) {
     console.log("VERIFY OTP ERROR:", error);
 

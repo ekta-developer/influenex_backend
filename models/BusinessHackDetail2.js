@@ -76,7 +76,7 @@ const BusinessHackStep3 = sequelize.define(
       defaultValue: false,
     },
   },
-  {
+  { 
     tableName: "business_hack_step3",
     timestamps: true,
   },

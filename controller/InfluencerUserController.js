@@ -1,4 +1,4 @@
-import Influencer from "../models/InfluencerUser.js";
+import influencersUser from "../models/InfluencerUser.js";
 import BusinessRegistration from "../models/Business.js";
 
 // ✅ CREATE Influencer
@@ -29,7 +29,7 @@ export const createInfluencer = async (req, res) => {
       });
     }
 
-    const influencerExists = await Influencer.findOne({
+    const influencerExists = await influencersUser.findOne({
       where: { mobileNumber },
     });
 
@@ -43,7 +43,7 @@ export const createInfluencer = async (req, res) => {
       });
     }
 
-    const influencer = await Influencer.create({
+    const influencer = await influencersUser.create({
       fullName,
       mobileNumber,
       email,

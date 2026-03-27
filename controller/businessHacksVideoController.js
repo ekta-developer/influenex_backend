@@ -1,7 +1,9 @@
 import BusinessHacks from "../models/BusinessHacksVideo.js";
+import fs from "fs";
+import path from "path";
 
 // const BASE_URL = "http://localhost:5000/";
-const baseUrl = "http://13.201.88.246";
+const BASE_URL = "http://13.201.88.246";
 
 const imagePath = "uploads/BusinessHacksMedia/thumbnails";
 const videoPath = "uploads/BusinessHacksMedia/videos";
@@ -39,9 +41,7 @@ export const createBusinessHack = async (req, res) => {
       ? req.files.thumbnail[0].filename
       : null;
 
-    const video = req.files?.video
-      ? req.files.video[0].filename
-      : null;
+    const video = req.files?.video ? req.files.video[0].filename : null;
 
     if (!video) {
       return res.status(400).json({
@@ -64,7 +64,6 @@ export const createBusinessHack = async (req, res) => {
       message: "Business Hack created successfully",
       data: convertMediaUrl(hack),
     });
-
   } catch (error) {
     res.status(500).json({
       status: false,
@@ -88,7 +87,6 @@ export const getAllBusinessHacks = async (req, res) => {
       status: true,
       data: formatted,
     });
-
   } catch (error) {
     res.status(500).json({
       status: false,
@@ -116,7 +114,6 @@ export const getBusinessHackById = async (req, res) => {
       status: true,
       data: convertMediaUrl(hack),
     });
-
   } catch (error) {
     res.status(500).json({
       status: false,
@@ -207,7 +204,7 @@ export const deleteBusinessHack = async (req, res) => {
 
     // Delete thumbnail
     if (hack.thumbnail) {
-      const thumbPath = path.join("uploads/thumbnails", hack.thumbnail);
+      const thumbPath = path.join("uploads/BusinessHacksMedia/thumbnails", hack.thumbnail);
 
       if (fs.existsSync(thumbPath)) {
         fs.unlinkSync(thumbPath);
@@ -216,7 +213,7 @@ export const deleteBusinessHack = async (req, res) => {
 
     // Delete video
     if (hack.video) {
-      const videoPath = path.join("uploads/videos", hack.video);
+      const videoPath = path.join("uploads/BusinessHacksMedia/videos", hack.video);
 
       if (fs.existsSync(videoPath)) {
         fs.unlinkSync(videoPath);

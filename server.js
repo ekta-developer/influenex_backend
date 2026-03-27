@@ -6,7 +6,7 @@ import rateLimit from "express-rate-limit";
 import path from "path";
 import sequelize from "./config/database.js";
 import cookieParser from "cookie-parser";
-
+import bodyParser from "body-parser";
 // ROUTES
 import authRoutes from "./routes/AuthRoutes.js";
 import otpRoutes from "./routes/OtpRoutes.js";
@@ -34,6 +34,7 @@ import influencerDashboardRoutes from "./routes/influencerDashboardRoutes.js";
 import campaignDataRoutes from "./routes/getCampaignRoute.js";
 import productRoutes from "./routes/productRoutes.js";
 import allCampaignDataRoutes from "./routes/AllCampaignDataRoute.js";
+import applicationRoutes from "./routes/applicationRoutes.js";
 // SEEDERS
 import { seedCampaignTypes } from "./seeders/seedCampaignTypes.js";
 
@@ -80,6 +81,15 @@ app.use(
   }),
 );
 
+
+app.use(bodyParser.json());
+
+// ================== ROUTE TO Test Backend is running or not ==================
+
+app.get("/", (req, res) => {
+  res.send("InfluenceX Backend Running 🚀");
+});
+
 // ================== 🌐 ROUTES ==================
 
 app.use("/api/auth", otpRoutes);
@@ -101,7 +111,6 @@ app.use("/api/influencers-user", influencerUserRoutes);
 app.use("/api/categories", influencerCategoryRoutes);
 app.use("/api/profiles", profileRoutes);
 app.use("/api/business-profile", BusinessRoutes);
-
 app.use("/api/city", cityRoutesTwo);
 app.use("/api", influencerListRoutes);
 app.use("/api/inhacks", inhacksRoutes);
@@ -112,6 +121,7 @@ app.use("/api/influencer-dashboard", influencerDashboardRoutes);
 app.use("/api/data", campaignDataRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/all-detail", allCampaignDataRoutes);
+app.use("/api/applications", applicationRoutes);
 
 // ================== ❌ GLOBAL ERROR HANDLER ==================
 
@@ -123,6 +133,7 @@ app.use((err, req, res, next) => {
     message: "Internal Server Error",
   });
 });
+
 
 // ================== 🚀 SERVER START ==================
 
