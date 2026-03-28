@@ -35,7 +35,7 @@ const InfluencerUser = sequelize.define(
       type: DataTypes.STRING,
     },
     refreshToken: {
-      type: DataTypes.JSON, // or ARRAY
+      type: DataTypes.TEXT, // or ARRAY
       allowNull: true,
       defaultValue: [],
     },

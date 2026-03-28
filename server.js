@@ -35,6 +35,8 @@ import campaignDataRoutes from "./routes/getCampaignRoute.js";
 import productRoutes from "./routes/productRoutes.js";
 import allCampaignDataRoutes from "./routes/AllCampaignDataRoute.js";
 import applicationRoutes from "./routes/applicationRoutes.js";
+import dealRoutes from "./routes/dealRoutes.js";
+
 // SEEDERS
 import { seedCampaignTypes } from "./seeders/seedCampaignTypes.js";
 
@@ -122,6 +124,7 @@ app.use("/api/data", campaignDataRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/all-detail", allCampaignDataRoutes);
 app.use("/api/applications", applicationRoutes);
+app.use("/api/deals", dealRoutes);
 
 // ================== ❌ GLOBAL ERROR HANDLER ==================
 
@@ -142,7 +145,7 @@ const startServer = async () => {
     await sequelize.authenticate();
     console.log("✅ Database connected successfully");
 
-    await sequelize.sync({ alter: false }); // ⚠️ safer in production
+    await sequelize.sync({ alter: true }); // ⚠️ safer in production
     console.log("✅ Tables synced");
 
     await seedCampaignTypes();

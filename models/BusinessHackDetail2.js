@@ -23,6 +23,7 @@ const BusinessHackStep3 = sequelize.define(
     gender: {
       type: DataTypes.ARRAY(DataTypes.STRING),
       allowNull: false,
+      defaultValue: ["All"], // ✅ IMPORTANT
       validate: {
         isArray(value) {
           if (!Array.isArray(value)) {
@@ -76,7 +77,7 @@ const BusinessHackStep3 = sequelize.define(
       defaultValue: false,
     },
   },
-  { 
+  {
     tableName: "business_hack_step3",
     timestamps: true,
   },

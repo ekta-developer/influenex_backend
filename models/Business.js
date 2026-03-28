@@ -41,7 +41,7 @@ const BusinessRegistration = sequelize.define(
       allowNull: true,
     },
     refreshToken: {
-      type: DataTypes.JSON, // or ARRAY
+      type: DataTypes.TEXT, // or ARRAY
       allowNull: true,
       defaultValue: [],
     },

@@ -1,5 +1,4 @@
 import Application from "../models/Application.js";
-
 /**
  * @desc    Influencer applies to a campaign
  * @route   POST /api/applications
@@ -10,7 +9,7 @@ export const applyToCampaign = async (req, res) => {
     const { campaignId, pitchMessage, expectedRate } = req.body;
 
     const user = req.user;
-console.log(user,"kjwdcjwbcwbvh");
+    console.log(user, "kjwdcjwbcwbvh");
 
     // ✅ STEP 1: Check if user exists
     if (!user) {
@@ -69,7 +68,6 @@ console.log(user,"kjwdcjwbcwbvh");
       message: "Application submitted successfully",
       data: application,
     });
-
   } catch (error) {
     console.log("ERROR:", error);
 
@@ -175,10 +173,14 @@ export const acceptApplication = async (req, res) => {
         application_id: application.id,
         influencer_id: application.influencer_id,
         brand_id: application.brand_id,
+
+        // ✅ ADD THIS
+        business_id: req.user.userId, // 👈 important fix
+
         agreed_price: application.expected_rate || 0,
         deal_status: "accepted",
       },
-      { transaction }
+      { transaction },
     );
 
     // Commit transaction (save all changes)

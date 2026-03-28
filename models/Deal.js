@@ -25,6 +25,10 @@ const Deal = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    business_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     agreed_price: {
       type: DataTypes.FLOAT,
       defaultValue: 0,
@@ -36,15 +40,20 @@ const Deal = sequelize.define(
         "under_review",
         "approved",
         "rejected",
-        "completed"
+        "completed",
       ),
       defaultValue: "accepted",
     },
+    content_link: { type: DataTypes.TEXT },
+    proof_files: { type: DataTypes.JSON },
+
+    submitted_at: { type: DataTypes.DATE },
+    approved_at: { type: DataTypes.DATE },
   },
   {
     tableName: "deals",
     timestamps: true,
-  }
+  },
 );
 
 export default Deal;
