@@ -145,7 +145,9 @@ const startServer = async () => {
     await sequelize.authenticate();
     console.log("✅ Database connected successfully");
 
-    await sequelize.sync({ alter: true }); // ⚠️ safer in production
+    await sequelize.sync({ alter: false
+      
+     }); // ⚠️ safer in production
     console.log("✅ Tables synced");
 
     await seedCampaignTypes();

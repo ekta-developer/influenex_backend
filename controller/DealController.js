@@ -25,33 +25,38 @@ export const getInfluencerDeals = async (req, res) => {
 };
 
 /**
- * @desc Get all deals for logged-in brand
- * @route GET /api/deals/brand
- * @access Brand
+ * @desc Get all deals for logged-in business
+ * @route GET /api/deals/business
+ * @access Business that accept appliaction so accepted application must be logged here
  */
-export const getBrandDeals = async (req, res) => {
+
+export const getMyDealsByBusiness = async (req, res) => {
   try {
+    const businessId = req.user.userId;
 
-    console.log(req.user, "Check this");
-
-    if (req.user.userType !== "business") {
-      return res.status(403).json({
-        success: false,
-        message: "Only brands can access their deals",
-      });
-    }
+    console.log("Fetching deals for:", businessId);
 
     const deals = await Deal.findAll({
-      where: { brand_id: req.user.userId },
+      where: {
+        business_id: businessId,
+      },
       order: [["createdAt", "DESC"]],
     });
 
-    res.json({ success: true, data: deals });
+    console.log("Deals found:", deals.length);
+
+    res.json({
+      success: true,
+      count: deals.length,
+      data: deals,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
-
 /**
  * @desc Influencer submits work
  * @route POST /api/deals/:id/submit

@@ -3,7 +3,7 @@ import {verifyToken} from "../middleware/AuthMiddleware.js";
 
 import {
   getInfluencerDeals,
-  getBrandDeals,
+  getMyDealsByBusiness,
   submitWork,
   startReview,
   approveWork,
@@ -13,7 +13,7 @@ import {
 const router = express.Router();
 
 router.get("/influencer", verifyToken, getInfluencerDeals);
-router.get("/brand", verifyToken, getBrandDeals);
+router.get("/business", verifyToken, getMyDealsByBusiness);
 router.post("/:id/submit", verifyToken, submitWork);
 router.post("/:id/review", verifyToken, startReview);
 router.post("/:id/approve", verifyToken, approveWork);

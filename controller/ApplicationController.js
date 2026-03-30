@@ -1,4 +1,6 @@
 import Application from "../models/Application.js";
+import BusinessRegistration from "../models/Business.js";
+import InfluencerUser from "../models/InfluencerUser.js";
 /**
  * @desc    Influencer applies to a campaign
  * @route   POST /api/applications
@@ -114,11 +116,11 @@ export const getMyApplications = async (req, res) => {
 export const getApplicationsByCampaign = async (req, res) => {
   try {
     // Extract campaign ID from URL params
-    const { campaignId } = req.params;
+    const { campaign_id } = req.params;
 
     // Fetch all applications for this campaign
     const applications = await Application.findAll({
-      where: { campaign_id: campaignId },
+      where: { campaign_id: campaign_id },
     });
 
     res.json({
@@ -141,19 +143,27 @@ import sequelize from "../config/database.js";
  * @route   POST /api/applications/:id/accept
  * @access  Brand (Protected)
  */
+
 export const acceptApplication = async (req, res) => {
-  // Start DB transaction (important for data consistency)
   const transaction = await sequelize.transaction();
 
   try {
     const { id } = req.params;
 
-    // 🔍 Find application by ID
-    const application = await Application.findByPk(id, {
-      transaction,
-    });
+    // ✅ Extract businessId from token
+    const businessId = req.user?.userId;
 
-    // If application not found
+    if (!businessId) {
+      await transaction.rollback();
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: Business ID not found in token",
+      });
+    }
+
+    // 🔍 Find application
+    const application = await Application.findByPk(id, { transaction });
+
     if (!application) {
       await transaction.rollback();
       return res.status(404).json({
@@ -162,28 +172,36 @@ export const acceptApplication = async (req, res) => {
       });
     }
 
-    // ✅ Update application status to accepted
+    // ✅ Update application
     application.status = "accepted";
     await application.save({ transaction });
 
-    // 🤝 Create deal based on accepted application
+    // 🔥 OPTIONAL: fetch business & influencer names (for denormalization)
+    const business = await BusinessRegistration.findByPk(businessId);
+    const influencer = await InfluencerUser.findByPk(application.influencer_id);
+    console.log(application, "hiiii this is application data");
+
+    console.log("USER:", req.user);
+    console.log("BUSINESS ID:", businessId);
+    console.log("APPLICATION:", application);
+    console.log("INFLUENCER ID:", application?.influencer_id);
+
+    // 🤝 Create Deal
     const deal = await Deal.create(
       {
         campaign_id: application.campaign_id,
         application_id: application.id,
         influencer_id: application.influencer_id,
         brand_id: application.brand_id,
-
-        // ✅ ADD THIS
-        business_id: req.user.userId, // 👈 important fix
-
+        business_id: businessId,
         agreed_price: application.expected_rate || 0,
         deal_status: "accepted",
       },
-      { transaction },
+      {
+        transaction,
+        logging: console.log, // 🔥 VERY IMPORTANT
+      },
     );
-
-    // Commit transaction (save all changes)
     await transaction.commit();
 
     res.json({
@@ -192,7 +210,6 @@ export const acceptApplication = async (req, res) => {
       data: deal,
     });
   } catch (error) {
-    // Rollback all DB changes if error occurs
     await transaction.rollback();
 
     res.status(500).json({
