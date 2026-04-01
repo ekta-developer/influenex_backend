@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
+import xss from "xss";
 
 const Product = sequelize.define(
   "Product",
@@ -8,6 +9,10 @@ const Product = sequelize.define(
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
+      validate: {
+        isInt: true,
+        min: 1,
+      },
     },
 
     productName: {
@@ -53,11 +58,13 @@ const Product = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
       validate: {
+        len: [0, 255],
         isSafePath(value) {
           if (value && value.includes("..")) {
             throw new Error("Invalid file path");
           }
         },
+        is: /^[a-zA-Z0-9._/-]*$/i, // safe path pattern
       },
     },
   },
@@ -65,11 +72,44 @@ const Product = sequelize.define(
     tableName: "products",
     timestamps: true,
 
-    // Prevent mass assignment attacks
     defaultScope: {
       attributes: { exclude: [] },
     },
+
+    hooks: {
+      beforeValidate: (data) => {
+        sanitizeProduct(data);
+      },
+    },
   }
 );
+
+// 🔐 Sanitizer
+function sanitizeProduct(data) {
+  if (data.productName) {
+    data.productName = xss(data.productName.trim());
+  }
+
+  if (data.productDescription) {
+    data.productDescription = xss(data.productDescription);
+  }
+
+  if (data.productImage) {
+    data.productImage = xss(data.productImage.trim());
+  }
+
+  // safe number conversion
+  if (data.productQuantity !== undefined) {
+    data.productQuantity = Number(data.productQuantity);
+
+    if (Number.isNaN(data.productQuantity) || data.productQuantity < 0) {
+      data.productQuantity = 0;
+    }
+  }
+
+  if (data.id !== undefined) {
+    data.id = Number(data.id);
+  }
+}
 
 export default Product;

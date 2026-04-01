@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
+import xss from "xss";
 
 const User = sequelize.define(
   "User",
@@ -9,31 +10,51 @@ const User = sequelize.define(
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
+
     name: {
       type: DataTypes.STRING,
-      allowNull: true,
+      validate: {
+        len: [0, 100],
+      },
     },
+
     email: {
       type: DataTypes.STRING,
       unique: true,
       allowNull: false,
+      validate: {
+        isEmail: true,
+        notEmpty: true,
+        len: [5, 150],
+      },
     },
+
     phone: {
       type: DataTypes.STRING,
       unique: true,
+      validate: {
+        is: /^[6-9]\d{9}$/, // Indian mobile
+      },
     },
+
     password_hash: {
       type: DataTypes.STRING,
       allowNull: false,
+      validate: {
+        len: [20, 255], // hashed password length
+      },
     },
+
     role: {
       type: DataTypes.ENUM("influencer", "brand", "admin"),
       allowNull: false,
     },
+
     status: {
       type: DataTypes.ENUM("pending", "approved", "rejected"),
       defaultValue: "pending",
     },
+
     refresh_token: {
       type: DataTypes.TEXT,
       allowNull: true,
@@ -43,7 +64,35 @@ const User = sequelize.define(
     timestamps: true,
     createdAt: "created_at",
     updatedAt: false,
-  },
+
+    hooks: {
+      beforeValidate: (data) => {
+        sanitizeUser(data);
+      },
+    },
+  }
 );
+
+// 🔐 Sanitizer
+function sanitizeUser(data) {
+  if (data.name) {
+    data.name = xss(data.name.trim());
+  }
+
+  if (data.email) {
+    data.email = xss(data.email.trim().toLowerCase());
+  }
+
+  if (data.phone) {
+    data.phone = xss(data.phone.trim());
+  }
+
+  // 🚨 DO NOT sanitize password_hash (already hashed)
+  // 🚨 DO NOT sanitize refresh_token blindly (handle carefully in controller)
+
+  if (data.id && typeof data.id !== "string") {
+    data.id = String(data.id);
+  }
+}
 
 export default User;

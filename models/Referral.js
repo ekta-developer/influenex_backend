@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
+import xss from "xss";
 
 const Referral = sequelize.define(
   "Referral",
@@ -8,16 +9,28 @@ const Referral = sequelize.define(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
+      validate: {
+        isInt: true,
+        min: 1,
+      },
     },
 
     referral_name: {
       type: DataTypes.STRING,
       allowNull: false,
+      validate: {
+        notEmpty: true,
+        len: [2, 100],
+      },
     },
 
     referred_by: {
       type: DataTypes.STRING,
       allowNull: false,
+      validate: {
+        notEmpty: true,
+        len: [2, 100],
+      },
     },
   },
   {
@@ -25,7 +38,28 @@ const Referral = sequelize.define(
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
+
+    hooks: {
+      beforeValidate: (data) => {
+        sanitizeReferral(data);
+      },
+    },
   }
 );
+
+// 🔐 Sanitizer
+function sanitizeReferral(data) {
+  if (data.referral_name) {
+    data.referral_name = xss(data.referral_name.trim());
+  }
+
+  if (data.referred_by) {
+    data.referred_by = xss(data.referred_by.trim());
+  }
+
+  if (data.id !== undefined) {
+    data.id = Number(data.id);
+  }
+}
 
 export default Referral;

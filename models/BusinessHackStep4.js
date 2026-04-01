@@ -1,6 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 import BusinessHack from "./BusinessHacks.js";
+import xss from "xss";
 
 const BusinessHackStep4 = sequelize.define(
   "BusinessHackStep4",
@@ -8,6 +9,10 @@ const BusinessHackStep4 = sequelize.define(
     businessHackId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      validate: {
+        isInt: true,
+        min: 1,
+      },
       references: {
         model: "business_hacks",
         key: "id",
@@ -17,18 +22,66 @@ const BusinessHackStep4 = sequelize.define(
 
     campaignImage: {
       type: DataTypes.STRING,
+      validate: {
+        len: [0, 255],
+        is: /^[a-zA-Z0-9._/-]*$/i, // safe file path
+      },
     },
 
     sampleMedia: {
-      // store multiple images as JSON array
       type: DataTypes.JSON,
+      validate: {
+        isArray(value) {
+          if (value && !Array.isArray(value)) {
+            throw new Error("sampleMedia must be an array");
+          }
+        },
+        maxItems(value) {
+          if (value && value.length > 20) {
+            throw new Error("Too many media files (max 20)");
+          }
+        },
+      },
     },
   },
   {
     tableName: "business_hack_step4",
     timestamps: true,
+
+    hooks: {
+      beforeValidate: (data) => {
+        sanitizeStep4(data);
+      },
+    },
   }
 );
+
+// 🔐 Sanitizer
+function sanitizeStep4(data) {
+  // sanitize single image path
+  if (data.campaignImage) {
+    data.campaignImage = xss(data.campaignImage.trim());
+  }
+
+  // sanitize array of media paths
+  if (data.sampleMedia && Array.isArray(data.sampleMedia)) {
+    data.sampleMedia = data.sampleMedia.map((item) => {
+      if (typeof item === "string") {
+        return xss(item.trim());
+      }
+      return item;
+    });
+  }
+
+  // ensure businessHackId is number
+  if (data.businessHackId !== undefined) {
+    data.businessHackId = Number(data.businessHackId);
+
+    if (Number.isNaN(data.businessHackId)) {
+      throw new Error("Invalid businessHackId");
+    }
+  }
+}
 
 // Association
 BusinessHack.hasOne(BusinessHackStep4, {

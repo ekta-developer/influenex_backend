@@ -28,6 +28,8 @@ export const createBusiness = async (req, res) => {
 // ✅ GET ALL Businesses (Only Logged-in User)
 export const getAllBusinesses = async (req, res) => {
   try {
+    console.log("Logged-in User UUID:", req.user.uuid); // Debugging line
+
     const businesses = await BusinessRegistration.findAll({
       // where: { business_user_id: req.user.userId },
       where: { business_user_id: req.user.uuid },
@@ -35,7 +37,7 @@ export const getAllBusinesses = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message:"Business User data fetched successfully!",
+      message: "Business User data fetched successfully!",
       data: convertToString(businesses.map((b) => b.toJSON())),
     });
   } catch (error) {

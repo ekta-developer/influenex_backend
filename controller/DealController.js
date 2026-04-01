@@ -34,16 +34,12 @@ export const getMyDealsByBusiness = async (req, res) => {
   try {
     const businessId = req.user.userId;
 
-    console.log("Fetching deals for:", businessId);
-
     const deals = await Deal.findAll({
       where: {
         business_id: businessId,
       },
       order: [["createdAt", "DESC"]],
     });
-
-    console.log("Deals found:", deals.length);
 
     res.json({
       success: true,
@@ -115,9 +111,10 @@ export const submitWork = async (req, res) => {
  * @route POST /api/deals/:id/review
  * @access Brand
  */
+
 export const startReview = async (req, res) => {
   try {
-    const deal = await Deal.findByPk(req.params.userId);
+    const deal = await Deal.findByPk(req.params.id);
 
     if (!deal) {
       return res
@@ -125,7 +122,7 @@ export const startReview = async (req, res) => {
         .json({ success: false, message: "Deal not found" });
     }
 
-    if (deal.brand_id !== req.user.userId) {
+    if (deal.business_id !== req.user.userId) {
       return res.status(403).json({
         success: false,
         message: "Not authorized",
@@ -163,7 +160,7 @@ export const approveWork = async (req, res) => {
         .json({ success: false, message: "Deal not found" });
     }
 
-    if (deal.brand_id !== req.user.id) {
+    if (deal.business_id !== req.user.userId) {
       return res.status(403).json({
         success: false,
         message: "Not authorized",
@@ -209,7 +206,7 @@ export const rejectWork = async (req, res) => {
         .json({ success: false, message: "Deal not found" });
     }
 
-    if (deal.brand_id !== req.user.userId) {
+    if (deal.business_id !== req.user.userId) {
       return res.status(403).json({
         success: false,
         message: "Not authorized",

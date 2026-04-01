@@ -1,5 +1,6 @@
 import { DataTypes, Sequelize } from "sequelize";
 import sequelize from "../config/database.js";
+import xss from "xss";
 
 const Influencer = sequelize.define(
   "Influencer",
@@ -7,35 +8,60 @@ const Influencer = sequelize.define(
     fullName: {
       type: DataTypes.STRING,
       allowNull: false,
-      validate: { notEmpty: true },
+      validate: {
+        notEmpty: true,
+        len: [2, 100],
+      },
     },
 
     slug: {
       type: DataTypes.STRING,
       unique: true,
       allowNull: false,
-      validate: { notEmpty: true },
+      validate: {
+        notEmpty: true,
+        len: [2, 150],
+        is: /^[a-z0-9-]+$/, // SEO safe slug
+      },
     },
 
-    profilePhoto: DataTypes.STRING,
+    profilePhoto: {
+      type: DataTypes.STRING,
+      validate: {
+        len: [0, 255],
+        is: /^[a-zA-Z0-9._/-]*$/i, // safe file path
+      },
+    },
 
     instagramUsername: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
-      validate: { notEmpty: true },
+      validate: {
+        notEmpty: true,
+        len: [2, 100],
+        is: /^[a-zA-Z0-9._]+$/, // valid IG username
+      },
     },
 
     followersCount: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0,
-      validate: { min: 0 },
+      validate: {
+        isInt: true,
+        min: 0,
+        max: 1000000000,
+      },
     },
 
     engagementRate: {
       type: DataTypes.FLOAT,
-      validate: { min: 0, max: 100 },
+      validate: {
+        isFloat: true,
+        min: 0,
+        max: 100,
+      },
     },
 
     niche: {
@@ -43,12 +69,27 @@ const Influencer = sequelize.define(
       defaultValue: Sequelize.literal("ARRAY[]::TEXT[]"),
     },
 
-    city: DataTypes.STRING,
-    bio: DataTypes.TEXT,
+    city: {
+      type: DataTypes.STRING,
+      validate: {
+        len: [0, 100],
+      },
+    },
+
+    bio: {
+      type: DataTypes.TEXT,
+      validate: {
+        len: [0, 2000],
+      },
+    },
 
     rateCard: {
       type: DataTypes.FLOAT,
-      validate: { min: 0 },
+      validate: {
+        isFloat: true,
+        min: 0,
+        max: 10000000,
+      },
     },
 
     portfolioLinks: {
@@ -73,7 +114,65 @@ const Influencer = sequelize.define(
   },
   {
     timestamps: true,
+
+    hooks: {
+      beforeValidate: (data) => {
+        sanitizeInfluencer(data);
+      },
+    },
   }
 );
+
+// 🔐 Sanitizer
+function sanitizeInfluencer(data) {
+  if (data.fullName) data.fullName = xss(data.fullName.trim());
+
+  if (data.slug) {
+    data.slug = xss(data.slug.trim().toLowerCase());
+  }
+
+  if (data.profilePhoto) {
+    data.profilePhoto = xss(data.profilePhoto.trim());
+  }
+
+  if (data.instagramUsername) {
+    data.instagramUsername = xss(data.instagramUsername.trim());
+  }
+
+  if (data.city) data.city = xss(data.city.trim());
+  if (data.bio) data.bio = xss(data.bio);
+
+  // sanitize arrays
+  const arrayFields = [
+    "niche",
+    "portfolioLinks",
+    "languages",
+    "contentCategories",
+  ];
+
+  arrayFields.forEach((field) => {
+    if (data[field] && Array.isArray(data[field])) {
+      data[field] = data[field].map((item) =>
+        typeof item === "string" ? xss(item.trim()) : item
+      );
+    }
+  });
+
+  // safe numbers
+  if (data.followersCount !== undefined) {
+    data.followersCount = Number(data.followersCount);
+    if (Number.isNaN(data.followersCount) || data.followersCount < 0) {
+      data.followersCount = 0;
+    }
+  }
+
+  if (data.engagementRate !== undefined) {
+    data.engagementRate = Number(data.engagementRate);
+  }
+
+  if (data.rateCard !== undefined) {
+    data.rateCard = Number(data.rateCard);
+  }
+}
 
 export default Influencer;

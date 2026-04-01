@@ -46,31 +46,57 @@ const app = express();
 
 app.use(cookieParser());
 
-// ================== 🔒 SECURITY MIDDLEWARE ==================
+/* ================== 🔒 SECURITY MIDDLEWARE ================== */
 
-// ✅ 1. Helmet (secure headers)
-app.use(helmet());
+// ✅ 1. Helmet (ADVANCED CONFIG)
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 
-// ✅ 2. Rate Limiting (anti brute-force / DOS)
+// ✅ 2. Rate Limiting (GLOBAL)
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 mins
-  max: 100, // max 100 requests per IP
-  message: "Too many requests, please try again later",
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use("/api", limiter);
 
-// ✅ 3. CORS (restrict origins)
+// 🔥 EXTRA: STRICT LIMIT FOR AUTH (OTP / LOGIN)
+const authLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 5, // only 5 attempts
+  message: "Too many attempts, try again later",
+});
+app.use("/api/auth", authLimiter);
+
+// ✅ 3. CORS (SECURE)
 app.use(
   cors({
-    origin: ["http://localhost:3000"], // change in production
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
-  }),
+  })
 );
 
-// ✅ 4. Body Limit (prevent large payload attacks)
+// ✅ 4. Body Limit
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+
+// ❌ REMOVE THIS (duplicate parsing)
+// app.use(bodyParser.json());
+
+/* ================== 🛡️ INPUT SANITIZATION ================== */
+
+// 🔥 Prevent NoSQL Injection
+import mongoSanitize from "express-mongo-sanitize";
+app.use(mongoSanitize());
+
+// 🔥 Prevent XSS (extra layer)
+import xssClean from "xss-clean";
+app.use(xssClean());
 
 // ================== 📁 STATIC FILE SECURITY ==================
 
@@ -82,7 +108,6 @@ app.use(
     dotfiles: "deny", // block hidden files
   }),
 );
-
 
 app.use(bodyParser.json());
 
@@ -183,11 +208,10 @@ process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 
 // 🔥 VERY IMPORTANT FOR NODEMON
-process.on("SIGUSR2", async () => {
+  process.on("SIGUSR2", async () => {
   console.log("🔄 Nodemon restart...");
 
   await sequelize.close();
   console.log("✅ DB closed before restart");
-
   process.kill(process.pid, "SIGUSR2");
 });
