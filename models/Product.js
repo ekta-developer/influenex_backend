@@ -9,10 +9,7 @@ const Product = sequelize.define(
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
-      validate: {
-        isInt: true,
-        min: 1,
-      },
+    
     },
 
     productName: {

@@ -9,10 +9,7 @@ const InfluencerDashboard = sequelize.define(
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
-      validate: {
-        isInt: true,
-        min: 1,
-      },
+    
     },
 
     device_type: {

@@ -9,10 +9,7 @@ const InHacks = sequelize.define(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
-      validate: {
-        isInt: true,
-        min: 1,
-      },
+     
     },
 
     title: {
