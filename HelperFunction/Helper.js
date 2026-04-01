@@ -92,3 +92,18 @@ export const normalizeGender = (gender) => {
 
   return [];
 };
+
+const BASE_URL = "http://localhost:5000"; // change port if needed
+
+export const formatImagePath = (filePath) => {
+  if (!filePath) return null;
+
+  // 1. Convert backslashes to forward slashes
+  let cleanPath = filePath.replace(/\\/g, "/");
+
+  // 2. Remove leading slash (to avoid //)
+  cleanPath = cleanPath.replace(/^\/+/, "");
+
+  // 3. Return full URL
+  return `${BASE_URL}/${cleanPath}`;
+};

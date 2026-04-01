@@ -2,6 +2,7 @@ import BusinessHack from "../models/BusinessHacks.js";
 import BusinessHackDetails from "../models/BusinessHackDetail.js";
 import BusinessHackStep3 from "../models/BusinessHackDetail2.js";
 import BusinessHackStep4 from "../models/BusinessHackStep4.js";
+import { formatImagePath } from "../HelperFunction/Helper.js";
 
 export const getAllBusinessHackData = async (req, res) => {
   try {
@@ -73,7 +74,17 @@ export const getAllBusinessHackData = async (req, res) => {
       business_hack: hack,
       business_hack_details: detailsMap[hack.id] || null,
       business_hack_step3: step3Map[hack.id] || null,
-      business_hack_step4: step4Map[hack.id] || null,
+      business_hack_step4: step4Map[hack.id]
+        ? {
+            ...step4Map[hack.id],
+
+            campaignImage: formatImagePath(step4Map[hack.id].campaignImage),
+
+            sampleMedia: Array.isArray(step4Map[hack.id].sampleMedia)
+              ? step4Map[hack.id].sampleMedia.map(formatImagePath)
+              : [],
+          }
+        : null,
     }));
 
     return res.status(200).json({
@@ -81,7 +92,6 @@ export const getAllBusinessHackData = async (req, res) => {
       message: "Data fetched successfully",
       data: fullData,
     });
-
   } catch (error) {
     console.error("MAIN ERROR:", error);
 

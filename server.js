@@ -88,16 +88,6 @@ app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 // ❌ REMOVE THIS (duplicate parsing)
 // app.use(bodyParser.json());
 
-/* ================== 🛡️ INPUT SANITIZATION ================== */
-
-// 🔥 Prevent NoSQL Injection
-import mongoSanitize from "express-mongo-sanitize";
-app.use(mongoSanitize());
-
-// 🔥 Prevent XSS (extra layer)
-import xssClean from "xss-clean";
-app.use(xssClean());
-
 // ================== 📁 STATIC FILE SECURITY ==================
 
 // ✅ Serve uploads safely (ONLY ONCE)

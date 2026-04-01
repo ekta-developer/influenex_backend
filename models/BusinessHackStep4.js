@@ -22,10 +22,23 @@ const BusinessHackStep4 = sequelize.define(
 
     campaignImage: {
       type: DataTypes.STRING,
-      validate: {
-        len: [0, 255],
-        is: /^[a-zA-Z0-9._/-]*$/i, // safe file path
-      },
+      allowNull: true,
+      // validate: {
+      //   len: {
+      //     args: [0, 255],
+      //     msg: "Image path must be less than 255 characters",
+      //   },
+      //   isValidPath(value) {
+      //     if (!value) return; // allow empty/null
+
+      //     // simple safe file path check
+      //     const regex = /^[a-zA-Z0-9._/-]+$/;
+
+      //     if (!regex.test(value)) {
+      //       throw new Error("Invalid image path format");
+      //     }
+      //   },
+      // },
     },
 
     sampleMedia: {
@@ -53,7 +66,7 @@ const BusinessHackStep4 = sequelize.define(
         sanitizeStep4(data);
       },
     },
-  }
+  },
 );
 
 // 🔐 Sanitizer

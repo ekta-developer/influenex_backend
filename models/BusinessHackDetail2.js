@@ -20,14 +20,43 @@ const BusinessHackStep3 = sequelize.define(
       onDelete: "CASCADE",
     },
 
+    // ✅ FIXED influencerCategory
     influencerCategory: {
       type: DataTypes.JSONB,
       allowNull: false,
       validate: {
-        isValidJSON(value) {
-          if (typeof value !== "object") {
-            throw new Error("Invalid influencerCategory format");
+        isValidCategory(value) {
+          if (!Array.isArray(value)) {
+            throw new Error("influencerCategory must be an array");
           }
+
+          if (value.length === 0) {
+            throw new Error("At least one influencer category is required");
+          }
+
+          const allowedCategories = [
+            "Fashion",
+            "Lifestyle",
+            "Fitness",
+            "Beauty",
+            "Travel",
+            "Food",
+            "Tech",
+          ];
+
+          value.forEach((item) => {
+            if (typeof item !== "string") {
+              throw new Error("Each category must be a string");
+            }
+
+            const formatted =
+              item.charAt(0).toUpperCase() +
+              item.slice(1).toLowerCase();
+
+            if (!allowedCategories.includes(formatted)) {
+              throw new Error(`Invalid category: ${item}`);
+            }
+          });
         },
       },
     },
@@ -82,26 +111,44 @@ const BusinessHackStep3 = sequelize.define(
       },
     },
 
+    // ✅ FIXED dos
     dos: {
       type: DataTypes.JSONB,
       allowNull: true,
       validate: {
         isArrayOfStrings(value) {
-          if (value && !Array.isArray(value)) {
+          if (value == null) return;
+
+          if (!Array.isArray(value)) {
             throw new Error("dos must be an array");
           }
+
+          value.forEach((item) => {
+            if (typeof item !== "string") {
+              throw new Error("Each dos item must be a string");
+            }
+          });
         },
       },
     },
 
+    // ✅ FIXED donts
     donts: {
       type: DataTypes.JSONB,
       allowNull: true,
       validate: {
         isArrayOfStrings(value) {
-          if (value && !Array.isArray(value)) {
+          if (value == null) return;
+
+          if (!Array.isArray(value)) {
             throw new Error("donts must be an array");
           }
+
+          value.forEach((item) => {
+            if (typeof item !== "string") {
+              throw new Error("Each donts item must be a string");
+            }
+          });
         },
       },
     },
