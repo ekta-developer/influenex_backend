@@ -1,13 +1,21 @@
 import CampaignType from "../models/CampaignType.js";
 
 export const seedCampaignTypes = async () => {
-  const types = ["Paid", "Reimbursement", "Barter"];
+  try {
+    // 🔥 Step 1: Clear existing data
+    await CampaignType.destroy({ where: {}, truncate: true });
 
-  for (let type of types) {
-    await CampaignType.findOrCreate({
-      where: { typeName: type },
-    });
+    // 🔥 Step 2: Seed fresh data
+    const types = ["Paid", "Reimbursement", "Barter"];
+
+    for (let type of types) {
+      await CampaignType.create({
+        typeName: type,
+      });
+    }
+
+    console.log("✅ Campaign types seeded successfully");
+  } catch (error) {
+    console.error("❌ Seeder Error:", error);
   }
-
-  console.log("Campaign types seeded successfully");
 };
