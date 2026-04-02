@@ -2,8 +2,10 @@ import { convertToString } from "../HelperFunction/Helper.js";
 import Influencer from "../models/InfluencerUser.js";
 import BusinessRegistration from "../models/Business.js";
 import { v4 as uuidv4 } from "uuid";
+import { ValidationError } from "sequelize";
 
 // ✅ CREATE
+
 export const createBusiness = async (req, res) => {
   try {
     const payload = {
@@ -19,9 +21,40 @@ export const createBusiness = async (req, res) => {
       data: convertToString(business.toJSON()),
     });
   } catch (error) {
+    // ✅ HANDLE VALIDATION ERRORS
+    if (error instanceof ValidationError) {
+      const errors = {};
+
+      error.errors.forEach((err) => {
+        errors[err.path] = err.message;
+      });
+
+      return res.status(200).json({
+        success: true, // 👈 as per your requirement
+        message: "Validation failed",
+        errors,
+      });
+    }
+
+    // ✅ HANDLE UNIQUE CONSTRAINT (duplicate data)
+    if (error.name === "SequelizeUniqueConstraintError") {
+      const errors = {};
+
+      error.errors.forEach((err) => {
+        errors[err.path] = `${err.path} already exists`;
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Duplicate data error",
+        errors,
+      });
+    }
+
+    // ❌ REAL SERVER ERROR
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Something went wrong",
     });
   }
 };
