@@ -52,7 +52,7 @@ app.use(cookieParser());
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
-  })
+  }),
 );
 
 // ✅ 2. Rate Limiting (GLOBAL)
@@ -72,13 +72,19 @@ const authLimiter = rateLimit({
 });
 app.use("/api/auth", authLimiter);
 
+//added log to check that the business-types hit or not
+app.use((req, res, next) => {
+  console.log("👉 Incoming:", req.method, req.url);
+  next();
+});
+
 // ✅ 3. CORS (SECURE)
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:3000",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
-  })
+  }),
 );
 
 // ✅ 4. Body Limit
@@ -99,7 +105,7 @@ app.use(
   }),
 );
 
-app.use(bodyParser.json());
+// app.use(bodyParser.json());
 
 // ================== ROUTE TO Test Backend is running or not ==================
 
@@ -108,22 +114,18 @@ app.get("/", (req, res) => {
 });
 
 // ================== 🌐 ROUTES ==================
-
 app.use("/api/auth", otpRoutes);
 app.use("/api/auth", authRoutes);
-
 app.use("/api/influencers", influencerRoutes);
 app.use("/api/cities", cityRoutes);
 app.use("/api", businessTypeRoutes);
 app.use("/api/business", businessRoutes);
 app.use("/api/campaigns", campaignRoutes);
 app.use("/api/brands", brandRoutes);
-
 app.use("/api/campaigns-step1", businessHackRoutes);
 app.use("/api/campaigns-details", businessHackDetailRoutes);
 app.use("/api/campaigns-step3", businessHackStep3Routes);
 app.use("/api/campaigns-step4", businessHackStep4Routes);
-
 app.use("/api/influencers-user", influencerUserRoutes);
 app.use("/api/categories", influencerCategoryRoutes);
 app.use("/api/profiles", profileRoutes);
@@ -145,13 +147,11 @@ app.use("/api/deals", dealRoutes);
 
 app.use((err, req, res, next) => {
   console.error("Error:", err.message);
-
   res.status(500).json({
     success: false,
     message: "Internal Server Error",
   });
 });
-
 
 // ================== 🚀 SERVER START ==================
 
@@ -160,9 +160,7 @@ const startServer = async () => {
     await sequelize.authenticate();
     console.log("✅ Database connected successfully");
 
-    await sequelize.sync({ alter: false
-      
-     }); // ⚠️ safer in production
+    await sequelize.sync({ alter: false }); // ⚠️ safer in production
     console.log("✅ Tables synced");
 
     await seedCampaignTypes();
@@ -198,7 +196,7 @@ process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 
 // 🔥 VERY IMPORTANT FOR NODEMON
-  process.on("SIGUSR2", async () => {
+process.on("SIGUSR2", async () => {
   console.log("🔄 Nodemon restart...");
 
   await sequelize.close();

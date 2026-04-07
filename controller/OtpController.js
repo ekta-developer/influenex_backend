@@ -5,6 +5,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../HelperFunction/Tokens.js";
+import { setAuthCookies } from "../utility/setCookies.js";
 
 /* =========================
    COMMON: FIND USER BY PHONE
@@ -85,6 +86,7 @@ export const sendOtp = async (req, res) => {
 /* =========================
    VERIFY OTP
 ========================= */
+
 export const verifyOtp = async (req, res) => {
   try {
     const { phone, otp } = req.body;
@@ -129,11 +131,7 @@ export const verifyOtp = async (req, res) => {
       });
     }
 
-    // ✅ mark verified
-    record.is_verified = true;
-    await record.save();
-
-    // ✅ delete OTP after use
+    // ✅ mark verified & delete
     await record.destroy();
 
     const { user, userType } = await findUserByPhone(phone);
@@ -152,17 +150,27 @@ export const verifyOtp = async (req, res) => {
       userType,
     };
 
+    // 🔁 Reuse refreshToken if exists
+    let refreshToken = user.refreshToken;
+
+    if (!refreshToken) {
+      refreshToken = generateRefreshToken(payload);
+      await user.update({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+    }
+
     const accessToken = generateAccessToken(payload);
-    const refreshToken = generateRefreshToken(payload);
 
-    // ✅ Save refresh token
-    await user.update({ refreshToken });
+    // 🍪 Set cookies
+    setAuthCookies(res, accessToken, refreshToken);
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: "Login successful",
-      accessToken,
-      refreshToken,
+      accessToken: accessToken, // 🔥 added
+      refreshToken: refreshToken, // 🔥 added
       user: {
         id: user.id.toString(),
         uuid: user.uuid,
@@ -198,8 +206,23 @@ export const logout = async (req, res) => {
       });
     }
 
-    // ❌ Remove refresh token
-    await user.update({ refreshToken: null });
+    // ❌ Remove refresh token from DB
+    await user.update({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+    // 🍪 CLEAR COOKIES
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+    });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+    });
 
     return res.json({
       success: true,
@@ -209,6 +232,89 @@ export const logout = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message,
+    });
+  }
+};
+
+/* =========================
+   REFRESH TOKEN API
+========================= */
+export const refreshAccessToken = async (req, res) => {
+  try {
+    // 🔥 Get refresh token from body OR header
+    const token =
+      req.body.refreshToken ||
+      req.headers["x-refresh-token"] ||
+      req.headers["authorization"]?.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Refresh token is required",
+      });
+    }
+
+    // 🔍 Verify refresh token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.REFRESH_SECRET);
+    } catch (err) {
+      return res.status(403).json({
+        success: false,
+        message: "Invalid or expired refresh token",
+      });
+    }
+
+    const { userId, userType } = decoded;
+
+    // 🔎 Find user
+    let user;
+
+    if (userType === "business") {
+      user = await BusinessRegistration.findByPk(userId);
+    } else {
+      user = await InfluencerUser.findByPk(userId);
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // 🔐 Match refresh token with DB (VERY IMPORTANT)
+    if (user.refreshToken !== token) {
+      return res.status(403).json({
+        success: false,
+        message: "Refresh token mismatch",
+      });
+    }
+
+    // 🎟️ Generate new access token
+    const newAccessToken = generateAccessToken({
+      userId: user.id,
+      phone: decoded.phone,
+      uuid: user.uuid,
+      userType,
+    });
+
+    // ✅ (Optional) Rotate refresh token
+    // const newRefreshToken = generateRefreshToken(decoded);
+    await user.update({
+      access_token: newAccessToken,
+    });
+    return res.status(200).json({
+      success: true,
+      message: "Access token refreshed",
+      accessToken: newAccessToken,
+    });
+  } catch (error) {
+    console.log("REFRESH TOKEN ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to refresh token",
     });
   }
 };
