@@ -7,6 +7,8 @@ import path from "path";
 import sequelize from "./config/database.js";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
+dotenv.config();
+
 // ROUTES
 import authRoutes from "./routes/AuthRoutes.js";
 import otpRoutes from "./routes/OtpRoutes.js";
@@ -40,8 +42,6 @@ import dealRoutes from "./routes/dealRoutes.js";
 // SEEDERS
 import { seedCampaignTypes } from "./seeders/seedCampaignTypes.js";
 
-dotenv.config();
-
 const app = express();
 
 app.use(cookieParser());
@@ -56,13 +56,13 @@ app.use(
 );
 
 // ✅ 2. Rate Limiting (GLOBAL)
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use("/api", limiter);
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000,
+//   max: 100,
+//   standardHeaders: true,
+//   legacyHeaders: false,
+// });
+// app.use("/api", limiter);
 
 // 🔥 EXTRA: STRICT LIMIT FOR AUTH (OTP / LOGIN)
 const authLimiter = rateLimit({

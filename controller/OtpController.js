@@ -1,11 +1,15 @@
 import Otp from "../models/Otp.js";
 import BusinessRegistration from "../models/Business.js";
 import InfluencerUser from "../models/InfluencerUser.js";
+import User from "../models/User.js";
 import {
   generateAccessToken,
   generateRefreshToken,
 } from "../HelperFunction/Tokens.js";
 import { setAuthCookies } from "../utility/setCookies.js";
+import jwt from "jsonwebtoken";
+
+console.log("User model:", User);
 
 /* =========================
    COMMON: FIND USER BY PHONE
@@ -86,7 +90,6 @@ export const sendOtp = async (req, res) => {
 /* =========================
    VERIFY OTP
 ========================= */
-
 export const verifyOtp = async (req, res) => {
   try {
     const { phone, otp } = req.body;
@@ -104,76 +107,73 @@ export const verifyOtp = async (req, res) => {
     });
 
     if (!record) {
-      return res.status(400).json({
-        status: false,
-        message: "OTP not found",
-      });
-    }
-
-    if (record.is_verified) {
-      return res.status(400).json({
-        status: false,
-        message: "OTP already used",
-      });
+      return res.status(400).json({ status: false, message: "OTP not found" });
     }
 
     if (new Date() > record.expires_at) {
-      return res.status(400).json({
-        status: false,
-        message: "OTP expired",
-      });
+      return res.status(400).json({ status: false, message: "OTP expired" });
     }
 
     if (String(record.otp_code) !== String(otp)) {
-      return res.status(400).json({
-        status: false,
-        message: "Invalid OTP",
-      });
+      return res.status(400).json({ status: false, message: "Invalid OTP" });
     }
 
-    // ✅ mark verified & delete
     await record.destroy();
 
+    // 🔍 Find user
     const { user, userType } = await findUserByPhone(phone);
 
     if (!user) {
-      return res.status(400).json({
-        status: false,
-        message: "User not found",
-      });
+      return res.status(400).json({ status: false, message: "User not found" });
     }
 
+    // ====================================================
+    // ✅ CREATE / UPDATE USER TABLE FIRST
+    // ====================================================
+    let existingUser = await User.findOne({ where: { phone } });
+
+    let dbUser;
+
+    if (!existingUser) {
+      dbUser = await User.create({
+        name: user.fullName || "User",
+        email: user.email || `${phone}@temp.com`,
+        phone,
+        password_hash: "default_hashed_password_123456",
+        role: userType === "business" ? "brand" : "influencer",
+        status: "approved",
+      });
+
+      console.log("✅ User created:", dbUser.id);
+    } else {
+      dbUser = existingUser;
+    }
+
+    // ====================================================
+    // 🎟️ TOKENS USING USER TABLE ID (IMPORTANT)
+    // ====================================================
     const payload = {
+      userId: dbUser.id, // ✅ FIXED (INTEGER)
       phone,
-      userId: user.id,
-      uuid: user.uuid,
       userType,
     };
 
-    // 🔁 Reuse refreshToken if exists
-    let refreshToken = user.refreshToken;
-
-    if (!refreshToken) {
-      refreshToken = generateRefreshToken(payload);
-      await user.update({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-    }
-
     const accessToken = generateAccessToken(payload);
+    const refreshToken = generateRefreshToken(payload);
 
-    // 🍪 Set cookies
-    setAuthCookies(res, accessToken, refreshToken);
+    // ✅ SAVE TOKENS IN USER TABLE
+    await dbUser.update({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
 
-    return res.status(200).json({
+    return res.json({
       success: true,
       message: "Login successful",
-      accessToken: accessToken, // 🔥 added
-      refreshToken: refreshToken, // 🔥 added
+      accessToken,
+      refreshToken,
       user: {
-        id: user.id.toString(),
-        uuid: user.uuid,
+        id: dbUser.id, // ✅ always from Users table
         type: userType,
       },
     });
@@ -186,6 +186,8 @@ export const verifyOtp = async (req, res) => {
     });
   }
 };
+
+//logout and refresh token functions are added here for better cohesion with OTP login/logout flow
 
 export const logout = async (req, res) => {
   try {
@@ -241,7 +243,6 @@ export const logout = async (req, res) => {
 ========================= */
 export const refreshAccessToken = async (req, res) => {
   try {
-    // 🔥 Get refresh token from body OR header
     const token =
       req.body.refreshToken ||
       req.headers["x-refresh-token"] ||
@@ -254,10 +255,9 @@ export const refreshAccessToken = async (req, res) => {
       });
     }
 
-    // 🔍 Verify refresh token
     let decoded;
     try {
-      decoded = jwt.verify(token, process.env.REFRESH_SECRET);
+      decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
     } catch (err) {
       return res.status(403).json({
         success: false,
@@ -265,16 +265,7 @@ export const refreshAccessToken = async (req, res) => {
       });
     }
 
-    const { userId, userType } = decoded;
-
-    // 🔎 Find user
-    let user;
-
-    if (userType === "business") {
-      user = await BusinessRegistration.findByPk(userId);
-    } else {
-      user = await InfluencerUser.findByPk(userId);
-    }
+    const user = await User.findByPk(decoded.userId); // ✅ INTEGER
 
     if (!user) {
       return res.status(404).json({
@@ -283,30 +274,25 @@ export const refreshAccessToken = async (req, res) => {
       });
     }
 
-    // 🔐 Match refresh token with DB (VERY IMPORTANT)
-    if (user.refreshToken !== token) {
+    if (user.refresh_token !== token) {
       return res.status(403).json({
         success: false,
         message: "Refresh token mismatch",
       });
     }
 
-    // 🎟️ Generate new access token
     const newAccessToken = generateAccessToken({
       userId: user.id,
       phone: decoded.phone,
-      uuid: user.uuid,
-      userType,
+      userType: decoded.userType,
     });
 
-    // ✅ (Optional) Rotate refresh token
-    // const newRefreshToken = generateRefreshToken(decoded);
     await user.update({
       access_token: newAccessToken,
     });
-    return res.status(200).json({
+
+    return res.json({
       success: true,
-      message: "Access token refreshed",
       accessToken: newAccessToken,
     });
   } catch (error) {

@@ -6,8 +6,8 @@ const User = sequelize.define(
   "User",
   {
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER, // ✅ FIXED
+      autoIncrement: true, // ✅ FIXED
       primaryKey: true,
     },
 

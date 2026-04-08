@@ -102,7 +102,6 @@ export const getInfluencerById = async (req, res) => {
         message: "Influencer not found",
       });
     }
-
     res.status(200).json({
       success: true,
       data: influencer,

@@ -107,10 +107,6 @@ function sanitizeInfluencerUser(data) {
   if (data.refreshToken) {
     data.refreshToken = xss(data.refreshToken.trim());
   }
-
-  if (data.id !== undefined) {
-    data.id = Number(data.id);
-  }
 }
 
 export default InfluencerUser;
