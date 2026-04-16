@@ -6,6 +6,36 @@ import rateLimit from "express-rate-limit";
 import path from "path";
 import sequelize from "./config/database.js";
 import cookieParser from "cookie-parser";
+import otpRoutes from "./routes/otpRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+import influencerRoutes from "./routes/influencerRoutes.js";
+import cityRoutes from "./routes/cityRoutes.js";
+import businessTypeRoutes from "./routes/businessTypeRoutes.js";
+import businessRoutes from "./routes/businessRoutes.js";
+import campaignRoutes from "./routes/campaignRoutes.js";
+import brandRoutes from "./routes/brandRoutes.js";
+import businessHackRoutes from "./routes/businessHackRoutes.js";
+import businessHackDetailRoutes from "./routes/businessHackDetailRoutes.js";
+import businessHackStep3Routes from "./routes/businessHackDetail2Routes.js";
+import businessHackStep4Routes from "./routes/businessHackStep4Routes.js";
+import influencerUserRoutes from "./routes/influencerUserRoutes.js";
+import influencerCategoryRoutes from "./routes/influencerCategoryRoutes.js";
+import profileRoutes from "./routes/profileRoutes.js";
+import BusinessRoutes from "./routes/businessRoutes.js";
+import cityRoutesTwo from "./routes/cityRoutesTwo.js";
+import influencerListRoutes from "./routes/influencerListRoutes.js";
+import inhacksRoutes from "./routes/inhacksRoutes.js";
+import businessHacksRoutes from "./routes/businessHackRoutes.js";
+import referralRoutes from "./routes/referralRoutes.js";
+import bannerRoutes from "./routes/bannerRoutes.js";
+import influencerDashboardRoutes from "./routes/influencerDashboardRoutes.js";
+import campaignDataRoutes from "./routes/campaignRoutes.js";
+import productRoutes from "./routes/productRoutes.js";
+import allCampaignDataRoutes from "./routes/AllCampaignDataRoute.js";
+import applicationRoutes from "./routes/applicationRoutes.js";
+import dealRoutes from "./routes/dealRoutes.js";
+import { seedCampaignTypes } from "./seeders/seedCampaignTypes.js";
+
 // ❌ REMOVE bodyParser (not needed)
 // import bodyParser from "body-parser";
 

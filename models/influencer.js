@@ -5,6 +5,12 @@ import xss from "xss";
 const Influencer = sequelize.define(
   "Influencer",
   {
+    // ✅ ADD THIS BLOCK (MOST IMPORTANT)
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
     fullName: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -120,7 +126,7 @@ const Influencer = sequelize.define(
         sanitizeInfluencer(data);
       },
     },
-  }
+  },
 );
 
 // 🔐 Sanitizer
@@ -153,7 +159,7 @@ function sanitizeInfluencer(data) {
   arrayFields.forEach((field) => {
     if (data[field] && Array.isArray(data[field])) {
       data[field] = data[field].map((item) =>
-        typeof item === "string" ? xss(item.trim()) : item
+        typeof item === "string" ? xss(item.trim()) : item,
       );
     }
   });
