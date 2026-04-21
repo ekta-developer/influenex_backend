@@ -9,9 +9,11 @@ const InfluencerList = sequelize.define(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
-    
     },
-
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
     name: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -49,7 +51,7 @@ const InfluencerList = sequelize.define(
         sanitizeInfluencerList(data);
       },
     },
-  }
+  },
 );
 
 // 🔐 Sanitizer

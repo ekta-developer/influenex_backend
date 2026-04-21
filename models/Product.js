@@ -9,9 +9,11 @@ const Product = sequelize.define(
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
-    
     },
-
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
     productName: {
       type: DataTypes.STRING(100),
       allowNull: false,
@@ -78,7 +80,7 @@ const Product = sequelize.define(
         sanitizeProduct(data);
       },
     },
-  }
+  },
 );
 
 // 🔐 Sanitizer

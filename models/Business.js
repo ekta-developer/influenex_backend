@@ -71,6 +71,10 @@ const BusinessRegistration = sequelize.define(
       allowNull: true,
       // ⚠️ NOTE: TEXT + default [] is not ideal but keeping non-breaking
     },
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
   },
   {
     tableName: "business_registration",
@@ -91,24 +95,20 @@ const BusinessRegistration = sequelize.define(
         sanitizeBusiness(business);
       },
     },
-  }
+  },
 );
 
 // 🔐 Central sanitizer
 function sanitizeBusiness(business) {
-  if (business.businessName)
-    business.businessName = xss(business.businessName);
+  if (business.businessName) business.businessName = xss(business.businessName);
 
-  if (business.mobileNumber)
-    business.mobileNumber = xss(business.mobileNumber);
+  if (business.mobileNumber) business.mobileNumber = xss(business.mobileNumber);
 
   if (business.city) business.city = xss(business.city);
 
-  if (business.businessType)
-    business.businessType = xss(business.businessType);
+  if (business.businessType) business.businessType = xss(business.businessType);
 
-  if (business.gstNumber)
-    business.gstNumber = xss(business.gstNumber);
+  if (business.gstNumber) business.gstNumber = xss(business.gstNumber);
 }
 
 export default BusinessRegistration;

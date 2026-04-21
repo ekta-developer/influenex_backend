@@ -9,7 +9,6 @@ const BusinessType = sequelize.define(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
-
     },
 
     name: {
@@ -28,6 +27,10 @@ const BusinessType = sequelize.define(
         len: [0, 255],
       },
     },
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
   },
   {
     tableName: "business_types",
@@ -38,7 +41,7 @@ const BusinessType = sequelize.define(
         sanitizeBusinessType(data);
       },
     },
-  }
+  },
 );
 
 // 🔐 Sanitizer

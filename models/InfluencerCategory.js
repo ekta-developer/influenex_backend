@@ -9,7 +9,6 @@ const InfluencerCategory = sequelize.define(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
-    
     },
 
     influencer_id: {
@@ -33,6 +32,10 @@ const InfluencerCategory = sequelize.define(
         len: [2, 100],
       },
     },
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
   },
   {
     tableName: "influencer_category",
@@ -43,7 +46,7 @@ const InfluencerCategory = sequelize.define(
         sanitizeInfluencerCategory(data);
       },
     },
-  }
+  },
 );
 
 // 🔐 Sanitizer

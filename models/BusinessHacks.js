@@ -6,12 +6,8 @@ const BusinessHack = sequelize.define(
   "BusinessHack",
   {
     user_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
-      validate: {
-        isInt: true,
-        min: 1,
-      },
     },
 
     campaignName: {
@@ -58,7 +54,7 @@ const BusinessHack = sequelize.define(
         sanitizeBusinessHack(data);
       },
     },
-  }
+  },
 );
 
 // 🔐 Sanitizer (Improved)

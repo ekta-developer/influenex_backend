@@ -37,7 +37,10 @@ const Campaign = sequelize.define(
         max: 100000,
       },
     },
-
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
     deliverables: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -128,7 +131,7 @@ const Campaign = sequelize.define(
         validateLogic(data);
       },
     },
-  }
+  },
 );
 
 // 🔐 Sanitizer

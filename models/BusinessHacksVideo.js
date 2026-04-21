@@ -89,7 +89,11 @@ const BusinessHacks = sequelize.define(
         sanitizeVideo(data);
       },
     },
-  }
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
+  },
 );
 
 // 🔐 Sanitizer

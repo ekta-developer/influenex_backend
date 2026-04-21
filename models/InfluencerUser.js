@@ -9,7 +9,11 @@ const InfluencerUser = sequelize.define(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
-    
+    },
+
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
     },
 
     fullName: {
@@ -78,7 +82,7 @@ const InfluencerUser = sequelize.define(
         sanitizeInfluencerUser(data);
       },
     },
-  }
+  },
 );
 
 // 🔐 Sanitizer

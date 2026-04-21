@@ -87,6 +87,10 @@ const BusinessProfile = sequelize.define(
         is: /^[1-9][0-9]{5}$/, // Indian PIN code
       },
     },
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
   },
   {
     tableName: "business_profiles",
@@ -97,7 +101,7 @@ const BusinessProfile = sequelize.define(
         sanitizeProfile(data);
       },
     },
-  }
+  },
 );
 
 // 🔐 Sanitizer
@@ -105,18 +109,14 @@ function sanitizeProfile(data) {
   if (data.name) data.name = xss(data.name.trim());
   if (data.businessCategory)
     data.businessCategory = xss(data.businessCategory.trim());
-  if (data.headquarters)
-    data.headquarters = xss(data.headquarters.trim());
+  if (data.headquarters) data.headquarters = xss(data.headquarters.trim());
   if (data.website) data.website = xss(data.website.trim());
   if (data.bio) data.bio = xss(data.bio);
-  if (data.businessName)
-    data.businessName = xss(data.businessName.trim());
+  if (data.businessName) data.businessName = xss(data.businessName.trim());
   if (data.gstin) data.gstin = xss(data.gstin.trim());
   if (data.panNumber) data.panNumber = xss(data.panNumber.trim());
-  if (data.businessAddress)
-    data.businessAddress = xss(data.businessAddress);
-  if (data.postalCode)
-    data.postalCode = xss(data.postalCode.trim());
+  if (data.businessAddress) data.businessAddress = xss(data.businessAddress);
+  if (data.postalCode) data.postalCode = xss(data.postalCode.trim());
 }
 
 export default BusinessProfile;

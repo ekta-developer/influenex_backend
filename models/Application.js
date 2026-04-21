@@ -51,13 +51,12 @@ const Application = sequelize.define(
     },
 
     status: {
-      type: DataTypes.ENUM(
-        "pending",
-        "accepted",
-        "rejected",
-        "withdrawn"
-      ),
+      type: DataTypes.ENUM("pending", "accepted", "rejected", "withdrawn"),
       defaultValue: "pending",
+    },
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
     },
   },
   {
@@ -77,7 +76,7 @@ const Application = sequelize.define(
         }
       },
     },
-  }
+  },
 );
 
 export default Application;

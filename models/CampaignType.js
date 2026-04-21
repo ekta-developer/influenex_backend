@@ -9,7 +9,6 @@ const CampaignType = sequelize.define(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
-   
     },
 
     typeName: {
@@ -23,6 +22,7 @@ const CampaignType = sequelize.define(
       },
     },
   },
+
   {
     tableName: "campaign_types",
     freezeTableName: true,
@@ -33,7 +33,7 @@ const CampaignType = sequelize.define(
         sanitizeCampaignType(data);
       },
     },
-  }
+  },
 );
 
 // 🔐 Sanitizer

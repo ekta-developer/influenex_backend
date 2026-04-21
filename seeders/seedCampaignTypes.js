@@ -2,20 +2,18 @@ import CampaignType from "../models/CampaignType.js";
 
 export const seedCampaignTypes = async () => {
   try {
-    // 🔥 Step 1: Clear existing data
-    await CampaignType.destroy({ where: {}, truncate: true });
+    const types = [
+      { typeName: "Paid" },
+      { typeName: "Reimbursement" },
+      { typeName: "Barter" },
+    ];
 
-    // 🔥 Step 2: Seed fresh data
-    const types = ["Paid", "Reimbursement", "Barter"];
+    await CampaignType.bulkCreate(types, {
+      ignoreDuplicates: true, // 🔥 key line
+    });
 
-    for (let type of types) {
-      await CampaignType.create({
-        typeName: type,
-      });
-    }
-
-    console.log("✅ Campaign types seeded successfully");
+    console.log("✅ Campaign types seeded safely (no duplicates)");
   } catch (error) {
-    console.error("❌ Seeder Error:", error);
+    console.error("❌ Seeder Error:", error.message);
   }
 };

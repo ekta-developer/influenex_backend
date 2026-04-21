@@ -103,6 +103,10 @@ const BusinessHackDetail = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
   },
   {
     tableName: "business_hack_details",
@@ -119,13 +123,12 @@ const BusinessHackDetail = sequelize.define(
         calculateBudget(data);
       },
     },
-  }
+  },
 );
 
 // 🔐 sanitize (minimal here, mostly numeric model)
 function sanitizeData(data) {
-  if (data.businessHackId)
-    data.businessHackId = parseInt(data.businessHackId);
+  if (data.businessHackId) data.businessHackId = parseInt(data.businessHackId);
 
   if (data.noOfReels) data.noOfReels = parseInt(data.noOfReels);
   if (data.noOfPosts) data.noOfPosts = parseInt(data.noOfPosts);
@@ -133,13 +136,11 @@ function sanitizeData(data) {
 
   if (data.numberOfInfluencersRequired)
     data.numberOfInfluencersRequired = parseInt(
-      data.numberOfInfluencersRequired
+      data.numberOfInfluencersRequired,
     );
 
   if (data.minimumFollowersRequired)
-    data.minimumFollowersRequired = parseInt(
-      data.minimumFollowersRequired
-    );
+    data.minimumFollowersRequired = parseInt(data.minimumFollowersRequired);
 
   if (data.costPerInfluencer)
     data.costPerInfluencer = parseFloat(data.costPerInfluencer);
@@ -154,8 +155,7 @@ function calculateBudget(data) {
     data.costPerInfluencer &&
     data.tax !== undefined
   ) {
-    const base =
-      data.numberOfInfluencersRequired * data.costPerInfluencer;
+    const base = data.numberOfInfluencersRequired * data.costPerInfluencer;
 
     const taxAmount = (base * data.tax) / 100;
 

@@ -51,7 +51,7 @@ app.use(cookieParser());
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
-  })
+  }),
 );
 
 /* ================== 🔥 RATE LIMIT FIX ================== */
@@ -81,7 +81,7 @@ app.use(
   cors({
     origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  })
+  }),
 );
 
 /* ================== 🔥 BODY LIMIT FIX ================== */
@@ -97,7 +97,7 @@ app.use(
   express.static(path.join(process.cwd(), "uploads"), {
     maxAge: "1d",
     dotfiles: "deny",
-  })
+  }),
 );
 
 /* ================== TEST ROUTE ================== */
@@ -155,7 +155,8 @@ const startServer = async () => {
     await sequelize.authenticate();
     console.log("✅ Database connected successfully");
 
-    await sequelize.sync({ alter: false });
+    await sequelize.sync({ force: true });
+
     console.log("✅ Tables synced");
 
     await seedCampaignTypes();
@@ -166,7 +167,6 @@ const startServer = async () => {
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
     });
-
   } catch (error) {
     console.error("❌ DB Error:", error.message);
   }

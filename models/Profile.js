@@ -14,6 +14,11 @@ const Profile = sequelize.define(
       },
     },
 
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
+
     businessName: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -112,7 +117,7 @@ const Profile = sequelize.define(
         sanitizeProfile(data);
       },
     },
-  }
+  },
 );
 
 // 🔐 Sanitizer

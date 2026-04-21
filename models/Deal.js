@@ -9,7 +9,6 @@ const Deal = sequelize.define(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
-    
     },
 
     campaign_id: {
@@ -61,7 +60,7 @@ const Deal = sequelize.define(
         "under_review",
         "approved",
         "rejected",
-        "completed"
+        "completed",
       ),
       defaultValue: "accepted",
     },
@@ -114,6 +113,10 @@ const Deal = sequelize.define(
       type: DataTypes.STRING,
       validate: { len: [0, 150] },
     },
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
   },
   {
     tableName: "deals",
@@ -126,7 +129,7 @@ const Deal = sequelize.define(
         enforceStatusLogic(data);
       },
     },
-  }
+  },
 );
 
 // 🔐 Sanitizer
@@ -146,12 +149,18 @@ function sanitizeDeal(data) {
   // sanitize proof files
   if (data.proof_files && Array.isArray(data.proof_files)) {
     data.proof_files = data.proof_files.map((file) =>
-      typeof file === "string" ? xss(file.trim()) : file
+      typeof file === "string" ? xss(file.trim()) : file,
     );
   }
 
   // safe number conversion
-  ["campaign_id", "application_id", "influencer_id", "business_id", "brand_id"].forEach((field) => {
+  [
+    "campaign_id",
+    "application_id",
+    "influencer_id",
+    "business_id",
+    "brand_id",
+  ].forEach((field) => {
     if (data[field] !== undefined) {
       data[field] = Number(data[field]);
       if (Number.isNaN(data[field])) {

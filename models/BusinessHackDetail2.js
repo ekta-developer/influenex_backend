@@ -50,8 +50,7 @@ const BusinessHackStep3 = sequelize.define(
             }
 
             const formatted =
-              item.charAt(0).toUpperCase() +
-              item.slice(1).toLowerCase();
+              item.charAt(0).toUpperCase() + item.slice(1).toLowerCase();
 
             if (!allowedCategories.includes(formatted)) {
               throw new Error(`Invalid category: ${item}`);
@@ -162,6 +161,10 @@ const BusinessHackStep3 = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
   },
   {
     tableName: "business_hack_step3",
@@ -177,7 +180,7 @@ const BusinessHackStep3 = sequelize.define(
         validateAgeLogic(data);
       },
     },
-  }
+  },
 );
 
 // 🔐 sanitize all inputs

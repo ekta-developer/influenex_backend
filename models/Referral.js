@@ -9,7 +9,11 @@ const Referral = sequelize.define(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
-   
+    },
+
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
     },
 
     referral_name: {
@@ -41,7 +45,7 @@ const Referral = sequelize.define(
         sanitizeReferral(data);
       },
     },
-  }
+  },
 );
 
 // 🔐 Sanitizer

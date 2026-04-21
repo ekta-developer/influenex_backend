@@ -6,7 +6,7 @@ import { Op } from "sequelize";
 export const getBusinessHackData = async (req, res) => {
   try {
     const userId = req.user?.userId;
-
+    console.log("REQ.USER:", req.user);
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -91,9 +91,7 @@ export const getBusinessHackData = async (req, res) => {
           noOfReels: toStr(d.noOfReels),
           noOfPosts: toStr(d.noOfPosts),
           noOfStories: toStr(d.noOfStories),
-          numberOfInfluencersRequired: toStr(
-            d.numberOfInfluencersRequired
-          ),
+          numberOfInfluencersRequired: toStr(d.numberOfInfluencersRequired),
           costPerInfluencer: toStr(d.costPerInfluencer),
         })),
 
@@ -110,7 +108,6 @@ export const getBusinessHackData = async (req, res) => {
       message: "Business Hack data fetched successfully",
       data: result,
     });
-
   } catch (error) {
     console.error("ERROR:", error);
     return res.status(500).json({

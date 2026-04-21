@@ -9,7 +9,11 @@ const InHacks = sequelize.define(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
-     
+    },
+
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
     },
 
     title: {
@@ -86,7 +90,7 @@ const InHacks = sequelize.define(
         sanitizeInHacks(data);
       },
     },
-  }
+  },
 );
 
 // 🔐 Sanitizer

@@ -20,6 +20,11 @@ const Influencer = sequelize.define(
       },
     },
 
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
+
     slug: {
       type: DataTypes.STRING,
       unique: true,

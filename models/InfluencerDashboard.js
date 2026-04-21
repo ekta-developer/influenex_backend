@@ -9,7 +9,6 @@ const InfluencerDashboard = sequelize.define(
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
-    
     },
 
     device_type: {
@@ -35,7 +34,11 @@ const InfluencerDashboard = sequelize.define(
         sanitizeDashboard(data);
       },
     },
-  }
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
+  },
 );
 
 // 🔐 Sanitizer

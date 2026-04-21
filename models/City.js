@@ -9,7 +9,6 @@ const City = sequelize.define(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
-     
     },
 
     name: {
@@ -82,6 +81,10 @@ const City = sequelize.define(
       type: DataTypes.ENUM("metropolitan", "tier1", "tier2", "tier3"),
       defaultValue: "tier2",
     },
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
   },
   {
     tableName: "cities",
@@ -93,7 +96,7 @@ const City = sequelize.define(
         sanitizeCity(data);
       },
     },
-  }
+  },
 );
 
 // 🔐 Sanitizer

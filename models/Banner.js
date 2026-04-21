@@ -20,6 +20,10 @@ const Banner = sequelize.define(
         is: /^[a-zA-Z0-9._/-]+$/i, // allow safe file paths only
       },
     },
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
   },
   {
     timestamps: true,
@@ -37,7 +41,7 @@ const Banner = sequelize.define(
         }
       },
     },
-  }
+  },
 );
 
 export default Banner;
