@@ -149,23 +149,22 @@ app.use((err, req, res, next) => {
 });
 
 /* ================== 🚀 SERVER START ================== */
-
 const startServer = async () => {
   try {
     await sequelize.authenticate();
     console.log("✅ Database connected successfully");
 
-    await sequelize.sync({ force: true });
-
+    await sequelize.sync(); // ❌ REMOVE force:true on live
     console.log("✅ Tables synced");
 
-    await seedCampaignTypes();
+    if (process.env.RUN_SEEDER === "true") {
+      await runAllSeeders();
+    }
 
-    const PORT = process.env.PORT || 5000;
+    const PORT = process.env.PORT;
 
-    // 🔥 MOST IMPORTANT FIX (EC2 ISSUE)
     app.listen(PORT, "0.0.0.0", () => {
-      console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
+      console.log(`🚀 Server running on :${PORT}`);
     });
   } catch (error) {
     console.error("❌ DB Error:", error.message);

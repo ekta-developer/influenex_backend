@@ -1,18 +1,6 @@
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
-import sequelize from "../config/database.js";
 import City from "../models/City.js";
 
-// recreate __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// load env
-dotenv.config({ path: path.join(__dirname, "../.env") });
-
 const cities = [
-  // Metropolitan Cities
   { name: "Mumbai", state: "Maharashtra", state_code: "MH", district: "Mumbai City", latitude: 19.07609, longitude: 72.877426, population: 20667656, is_capital: false, city_type: "metropolitan" },
   { name: "Delhi", state: "Delhi", state_code: "DL", district: "New Delhi", latitude: 28.613939, longitude: 77.209023, population: 32941000, is_capital: true, city_type: "metropolitan" },
   { name: "Bengaluru", state: "Karnataka", state_code: "KA", district: "Bengaluru Urban", latitude: 12.971599, longitude: 77.594566, population: 13193000, is_capital: true, city_type: "metropolitan" },
@@ -22,7 +10,6 @@ const cities = [
   { name: "Ahmedabad", state: "Gujarat", state_code: "GJ", district: "Ahmedabad", latitude: 23.022505, longitude: 72.571362, population: 8059441, is_capital: false, city_type: "metropolitan" },
   { name: "Pune", state: "Maharashtra", state_code: "MH", district: "Pune", latitude: 18.52043, longitude: 73.856743, population: 7276000, is_capital: false, city_type: "metropolitan" },
 
-  // Tier 1 Cities
   { name: "Surat", state: "Gujarat", state_code: "GJ", district: "Surat", latitude: 21.17024, longitude: 72.831062, population: 7784000, is_capital: false, city_type: "tier1" },
   { name: "Jaipur", state: "Rajasthan", state_code: "RJ", district: "Jaipur", latitude: 26.912434, longitude: 75.78727, population: 3978000, is_capital: true, city_type: "tier1" },
   { name: "Lucknow", state: "Uttar Pradesh", state_code: "UP", district: "Lucknow", latitude: 26.846694, longitude: 80.946166, population: 3752000, is_capital: true, city_type: "tier1" },
@@ -33,14 +20,12 @@ const cities = [
   { name: "Bhopal", state: "Madhya Pradesh", state_code: "MP", district: "Bhopal", latitude: 23.259933, longitude: 77.412615, population: 2364000, is_capital: true, city_type: "tier1" },
   { name: "Visakhapatnam", state: "Andhra Pradesh", state_code: "AP", district: "Visakhapatnam", latitude: 17.686816, longitude: 83.218482, population: 2329000, is_capital: false, city_type: "tier1" },
 
-  // Tier 2 Cities
   { name: "Ghaziabad", state: "Uttar Pradesh", state_code: "UP", district: "Ghaziabad", latitude: 28.669862, longitude: 77.45356, population: 2375820, is_capital: false, city_type: "tier2" },
   { name: "Agra", state: "Uttar Pradesh", state_code: "UP", district: "Agra", latitude: 27.17667, longitude: 78.00808, population: 1760285, is_capital: false, city_type: "tier2" },
   { name: "Nashik", state: "Maharashtra", state_code: "MH", district: "Nashik", latitude: 19.997454, longitude: 73.789803, population: 1562769, is_capital: false, city_type: "tier2" },
   { name: "Meerut", state: "Uttar Pradesh", state_code: "UP", district: "Meerut", latitude: 28.984461, longitude: 77.706413, population: 1424826, is_capital: false, city_type: "tier2" },
   { name: "Varanasi", state: "Uttar Pradesh", state_code: "UP", district: "Varanasi", latitude: 25.317645, longitude: 82.973915, population: 1432280, is_capital: false, city_type: "tier2" },
 
-  // Tier 3 Cities
   { name: "Mysuru", state: "Karnataka", state_code: "KA", district: "Mysuru", latitude: 12.29581, longitude: 76.639381, population: 920550, is_capital: false, city_type: "tier3" },
   { name: "Gurgaon", state: "Haryana", state_code: "HR", district: "Gurugram", latitude: 28.459497, longitude: 77.026634, population: 876824, is_capital: false, city_type: "tier3" },
   { name: "Noida", state: "Uttar Pradesh", state_code: "UP", district: "Gautam Buddha Nagar", latitude: 28.535517, longitude: 77.391029, population: 642381, is_capital: false, city_type: "tier3" },
@@ -49,25 +34,19 @@ const cities = [
 
 const seedCities = async () => {
   try {
-    await sequelize.authenticate();
-    console.log("✅ DB Connected");
-
-    await sequelize.sync();
-
     const count = await City.count();
 
     if (count > 0) {
-      console.log("⚠️ Cities already exist");
-      process.exit();
+      console.log("⚠️ Cities already exist, skipping...");
+      return;
     }
 
     await City.bulkCreate(cities);
 
-    console.log("✅ Cities inserted successfully");
-    process.exit();
+    console.log("✅ Cities seeded successfully");
   } catch (error) {
-    console.error("Seeder error:", error);
+    console.error("❌ City seeder error:", error.message);
   }
 };
 
-seedCities();
+export default seedCities;

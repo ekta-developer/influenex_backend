@@ -1,28 +1,21 @@
-module.exports = {
-  async up(queryInterface, Sequelize) {
-    await queryInterface.bulkInsert('business_types', [
-      {
-        id: 1,
-        name: 'Private Ltd',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        id: 2,
-        name: 'Public Ltd',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        id: 3,
-        name: 'Partnership',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }
-    ]);
-  },
+import BusinessType from "../models/BusinessType.js";
 
-  async down(queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('business_types', null, {});
-  },
+const seedBusinessTypes = async () => {
+  try {
+    const data = [
+      { id: 1, name: "Private Ltd" },
+      { id: 2, name: "Public Ltd" },
+      { id: 3, name: "Partnership" },
+    ];
+
+    await BusinessType.bulkCreate(data, {
+      ignoreDuplicates: true, // ✅ prevents crash
+    });
+
+    console.log("✅ Business types seeded");
+  } catch (error) {
+    console.error("❌ Business types seeder error:", error.message);
+  }
 };
+
+export default seedBusinessTypes;
