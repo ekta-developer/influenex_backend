@@ -35,6 +35,7 @@ import allCampaignDataRoutes from "./routes/AllCampaignDataRoute.js";
 import applicationRoutes from "./routes/applicationRoutes.js";
 import dealRoutes from "./routes/dealRoutes.js";
 import { seedCampaignTypes } from "./seeders/seedCampaignTypes.js";
+import { runAllSeeders } from "./seeders/runAllSeeders.js";
 
 // ❌ REMOVE bodyParser (not needed)
 // import bodyParser from "body-parser";
