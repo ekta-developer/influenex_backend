@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+dotenv.config();
+
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import path from "path";
@@ -39,9 +41,6 @@ import { runAllSeeders } from "./seeders/runAllSeeders.js";
 
 // ❌ REMOVE bodyParser (not needed)
 // import bodyParser from "body-parser";
-
-dotenv.config();
-
 const app = express();
 
 app.use(cookieParser());
@@ -149,6 +148,7 @@ app.use((err, req, res, next) => {
   });
 });
 
+console.log("ENV CHECK --->", process.env.RUN_SEEDER);
 /* ================== 🚀 SERVER START ================== */
 const startServer = async () => {
   try {

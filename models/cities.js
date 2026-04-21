@@ -29,10 +29,6 @@ const City = sequelize.define(
         len: [2, 100],
       },
     },
-    user_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
   },
   {
     tableName: "Cities",

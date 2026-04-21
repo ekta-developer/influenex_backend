@@ -27,10 +27,6 @@ const BusinessType = sequelize.define(
         len: [0, 255],
       },
     },
-    user_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
   },
   {
     tableName: "business_types",

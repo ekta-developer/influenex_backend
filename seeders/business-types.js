@@ -1,4 +1,4 @@
-import BusinessType from "../models/BusinessType.js";
+import BusinessType from "../models/BusinessTypes.js";
 
 const seedBusinessTypes = async () => {
   try {

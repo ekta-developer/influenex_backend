@@ -1,9 +1,9 @@
 import sequelize from "../config/database.js";
 
 import { seedCampaignTypes } from "./seedCampaignTypes.js";
-import { seedCities } from "./CitySeeder.js";
+import seedCities  from "./CitySeeder.js";
 import { seedInfluencerList } from "./influencerListSeeder.js";
-import { seedBusinessTypes } from "./business-types.js"; // make sure export exists
+import seedBusinessTypes from "./business-types.js"; // make sure export exists
 
 export const runAllSeeders = async () => {
   try {

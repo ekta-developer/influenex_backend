@@ -81,10 +81,6 @@ const City = sequelize.define(
       type: DataTypes.ENUM("metropolitan", "tier1", "tier2", "tier3"),
       defaultValue: "tier2",
     },
-    user_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
   },
   {
     tableName: "cities",

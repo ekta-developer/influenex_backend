@@ -10,7 +10,6 @@ const CampaignType = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-
     typeName: {
       type: DataTypes.STRING,
       allowNull: false,
