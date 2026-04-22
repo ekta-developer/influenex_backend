@@ -20,9 +20,10 @@ const Influencer = sequelize.define(
       },
     },
 
-    user_id: {
+    userId: {
       type: DataTypes.UUID,
       allowNull: false,
+      field: "user_id", // 🔥 VERY IMPORTANT FIX
     },
 
     slug: {
@@ -184,6 +185,12 @@ function sanitizeInfluencer(data) {
   if (data.rateCard !== undefined) {
     data.rateCard = Number(data.rateCard);
   }
+
+  Influencer.associate = (models) => {
+    Influencer.belongsTo(models.User, {
+      foreignKey: "userId",
+    });
+  };
 }
 
 export default Influencer;

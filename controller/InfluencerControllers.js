@@ -4,6 +4,7 @@ import slugify from "slugify";
 import { convertToString } from "../HelperFunction/Helper.js";
 import path from "path";
 import fs from "fs";
+
 export const createInfluencer = async (req, res) => {
   const transaction = await sequelize.transaction();
 
@@ -21,21 +22,17 @@ export const createInfluencer = async (req, res) => {
       languages,
       gender,
       contentCategories,
+      userId, // ✅ ADD THIS
     } = req.body;
 
-    // ✅ Safe Array Parser (Handles form-data properly)
     const parseArray = (field) => {
       if (!field) return [];
-
-      // If already array
       if (Array.isArray(field)) return field;
 
-      // If comma separated string (Fashion,Travel)
       if (typeof field === "string" && !field.startsWith("[")) {
         return field.split(",").map((item) => item.trim());
       }
 
-      // If JSON string
       try {
         return JSON.parse(field);
       } catch {
@@ -43,11 +40,9 @@ export const createInfluencer = async (req, res) => {
       }
     };
 
-    // ✅ Convert numbers safely (form-data sends string)
     const parsedFollowers = Number(followersCount);
     const parsedEngagement = engagementRate ? Number(engagementRate) : null;
 
-    // 🔎 Basic Validation
     if (!fullName || !instagramUsername || !parsedFollowers) {
       await transaction.rollback();
       return res.status(400).json({
@@ -56,7 +51,15 @@ export const createInfluencer = async (req, res) => {
       });
     }
 
-    // 🔎 Check Unique Instagram
+    // ✅ VALIDATE userId (IMPORTANT)
+    if (!userId) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "userId is required",
+      });
+    }
+
     const existingUser = await Influencer.findOne({
       where: { instagramUsername },
     });
@@ -69,18 +72,31 @@ export const createInfluencer = async (req, res) => {
       });
     }
 
-    // 🖼 Handle Image
     const profilePhoto = req.file
       ? `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`
       : null;
 
-    // 🔗 Generate Slug
     const slug = slugify(`${fullName}-${instagramUsername}`, {
       lower: true,
       strict: true,
     });
 
-    // ✅ Create Influencer
+    // ✅ FIX GENDER
+    let formattedGender = null;
+    if (gender) {
+      formattedGender =
+        gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase();
+
+      const validGenders = ["Male", "Female", "Other"];
+      if (!validGenders.includes(formattedGender)) {
+        await transaction.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "Invalid gender value",
+        });
+      }
+    }
+
     const influencer = await Influencer.create(
       {
         fullName,
@@ -95,7 +111,11 @@ export const createInfluencer = async (req, res) => {
         rateCard,
         portfolioLinks: parseArray(portfolioLinks),
         languages: parseArray(languages),
-        gender,
+
+        // ✅ IMPORTANT FIX
+        userId,
+
+        gender: formattedGender,
         contentCategories: parseArray(contentCategories),
       },
       { transaction },
@@ -106,7 +126,7 @@ export const createInfluencer = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Influencer created successfully",
-      data: convertToString(influencer.toJSON()) ,
+      data: convertToString(influencer.toJSON()),
     });
   } catch (error) {
     console.error("FULL ERROR:", error);
@@ -150,10 +170,8 @@ export const updateInfluencer = async (req, res) => {
       contentCategories,
     } = req.body;
 
-    // ✅ Safe Array Parser
     const parseArray = (field) => {
       if (!field) return [];
-
       if (Array.isArray(field)) return field;
 
       if (typeof field === "string" && !field.startsWith("[")) {
@@ -167,7 +185,6 @@ export const updateInfluencer = async (req, res) => {
       }
     };
 
-    // ✅ Convert numbers safely
     const parsedFollowers = followersCount
       ? Number(followersCount)
       : influencer.followersCount;
@@ -176,7 +193,6 @@ export const updateInfluencer = async (req, res) => {
       ? Number(engagementRate)
       : influencer.engagementRate;
 
-    // 🔎 Prevent duplicate Instagram username
     if (
       instagramUsername &&
       instagramUsername !== influencer.instagramUsername
@@ -194,11 +210,9 @@ export const updateInfluencer = async (req, res) => {
       }
     }
 
-    // 🖼 Handle Image Update
     let profilePhoto = influencer.profilePhoto;
 
     if (req.file) {
-      // Delete old image if exists
       if (profilePhoto) {
         const oldImageName = profilePhoto.split("/uploads/")[1];
         const oldImagePath = path.join("uploads", oldImageName);
@@ -211,7 +225,6 @@ export const updateInfluencer = async (req, res) => {
       profilePhoto = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
     }
 
-    // 🔗 Regenerate slug if name or username changed
     const updatedSlug =
       fullName || instagramUsername
         ? slugify(
@@ -222,7 +235,25 @@ export const updateInfluencer = async (req, res) => {
           )
         : influencer.slug;
 
-    // ✅ Update Influencer
+    // ✅ FIX GENDER
+    let formattedGender = influencer.gender;
+    if (gender) {
+      const temp =
+        gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase();
+
+      const validGenders = ["Male", "Female", "Other"];
+
+      if (!validGenders.includes(temp)) {
+        await transaction.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "Invalid gender value",
+        });
+      }
+
+      formattedGender = temp;
+    }
+
     await influencer.update(
       {
         fullName: fullName || influencer.fullName,
@@ -239,7 +270,10 @@ export const updateInfluencer = async (req, res) => {
           ? parseArray(portfolioLinks)
           : influencer.portfolioLinks,
         languages: languages ? parseArray(languages) : influencer.languages,
-        gender: gender || influencer.gender,
+
+        // ✅ IMPORTANT FIX
+        gender: formattedGender,
+
         contentCategories: contentCategories
           ? parseArray(contentCategories)
           : influencer.contentCategories,
@@ -263,7 +297,6 @@ export const updateInfluencer = async (req, res) => {
     });
   }
 };
-
 // GET BY ID
 export const getInfluencerById = async (req, res) => {
   try {

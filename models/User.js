@@ -16,7 +16,6 @@ const User = sequelize.define(
         len: [0, 100],
       },
     },
-
     email: {
       type: DataTypes.STRING,
       unique: true,
@@ -27,38 +26,32 @@ const User = sequelize.define(
         len: [5, 150],
       },
     },
-
     phone: {
       type: DataTypes.STRING,
       unique: true,
       validate: {
-        is: /^[6-9]\d{9}$/, // Indian mobile
+        is: /^[6-9]\d{9}$/,
       },
     },
-
     password_hash: {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        len: [20, 255], // hashed password length
+        len: [20, 255],
       },
     },
-
     role: {
       type: DataTypes.ENUM("influencer", "brand", "admin"),
       allowNull: false,
     },
-
     status: {
       type: DataTypes.ENUM("pending", "approved", "rejected"),
       defaultValue: "pending",
     },
-
     refresh_token: {
       type: DataTypes.TEXT,
       allowNull: true,
     },
-
     access_token: {
       type: DataTypes.TEXT,
       allowNull: true,
@@ -74,29 +67,25 @@ const User = sequelize.define(
         sanitizeUser(data);
       },
     },
-  },
+  }
 );
 
 // 🔐 Sanitizer
 function sanitizeUser(data) {
-  if (data.name) {
-    data.name = xss(data.name.trim());
-  }
-
-  if (data.email) {
-    data.email = xss(data.email.trim().toLowerCase());
-  }
-
-  if (data.phone) {
-    data.phone = xss(data.phone.trim());
-  }
-
-  // 🚨 DO NOT sanitize password_hash (already hashed)
-  // 🚨 DO NOT sanitize refresh_token blindly (handle carefully in controller)
+  if (data.name) data.name = xss(data.name.trim());
+  if (data.email) data.email = xss(data.email.trim().toLowerCase());
+  if (data.phone) data.phone = xss(data.phone.trim());
 
   if (data.id && typeof data.id !== "string") {
     data.id = String(data.id);
   }
 }
+
+// ✅ ADD ASSOCIATION LIKE THIS (correct way)
+User.associate = (models) => {
+  User.hasMany(models.Influencer, {
+    foreignKey: "userId",
+  });
+};
 
 export default User;
