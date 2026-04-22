@@ -43,13 +43,42 @@ export const createInfluencer = async (req, res) => {
       });
     }
 
+    // ✅ FIX STARTS HERE
+
+    if (!gender) {
+      return res.status(200).json({
+        response: {
+          status: false,
+          message: "Gender is required",
+        },
+      });
+    }
+
+    // Normalize gender (male → Male)
+    const formattedGender =
+      gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase();
+
+    // Validate gender
+    const validGenders = ["Male", "Female", "Other"];
+
+    if (!validGenders.includes(formattedGender)) {
+      return res.status(200).json({
+        response: {
+          status: false,
+          message: "Invalid gender value",
+        },
+      });
+    }
+
+    // ✅ FIX ENDS HERE
+
     const influencer = await influencersUser.create({
       fullName,
       mobileNumber,
       email,
       dob: dob ? new Date(dob) : null,
       city,
-      gender: gender?.toLowerCase(),
+      gender: formattedGender, // 🔥 IMPORTANT CHANGE
     });
 
     return res.status(201).json({
@@ -60,14 +89,13 @@ export const createInfluencer = async (req, res) => {
       },
     });
   } catch (error) {
-
     console.log("ERROR >>>", error);
 
     return res.status(500).json({
       response: {
         status: false,
         message: error.errors
-          ? error.errors.map(e => e.message)
+          ? error.errors.map((e) => e.message)
           : error.message,
       },
     });
