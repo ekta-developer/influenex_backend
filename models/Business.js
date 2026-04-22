@@ -71,10 +71,6 @@ const BusinessRegistration = sequelize.define(
       allowNull: true,
       // ⚠️ NOTE: TEXT + default [] is not ideal but keeping non-breaking
     },
-    user_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
   },
   {
     tableName: "business_registration",
