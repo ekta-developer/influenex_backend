@@ -11,11 +11,6 @@ const InfluencerUser = sequelize.define(
       primaryKey: true,
     },
 
-    user_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
-
     fullName: {
       type: DataTypes.STRING,
       allowNull: false,

@@ -22,10 +22,6 @@ const Otp = sequelize.define(
         is: /^\d{4,6}$/, // 4–6 digit OTP
       },
     },
-    user_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
     expires_at: {
       type: DataTypes.DATE,
       allowNull: false,
