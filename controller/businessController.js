@@ -4,8 +4,7 @@ import BusinessRegistration from "../models/Business.js";
 import { v4 as uuidv4 } from "uuid";
 import { ValidationError } from "sequelize";
 
-// ✅ CREATE
-
+// ✅ CREATE Business
 export const createBusiness = async (req, res) => {
   try {
     const payload = {

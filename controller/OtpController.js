@@ -162,9 +162,9 @@ export const verifyOtp = async (req, res) => {
     const refreshToken = generateRefreshToken(payload);
 
     // ✅ SAVE TOKENS IN USER TABLE
-    await dbUser.update({
-      access_token: accessToken,
-      refresh_token: refreshToken,
+    await user.update({
+      access_token: null,
+      refresh_token: null,
     });
 
     return res.json({
@@ -191,15 +191,16 @@ export const verifyOtp = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
-    const { userId, userType } = req.user;
+    const { userId } = req.user;
 
-    let user;
-
-    if (userType === "business") {
-      user = await BusinessRegistration.findByPk(userId);
-    } else {
-      user = await InfluencerUser.findByPk(userId);
+    if (!isValidInteger(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid userId",
+      });
     }
+
+    const user = await User.findByPk(Number(userId));
 
     if (!user) {
       return res.status(404).json({
@@ -208,23 +209,13 @@ export const logout = async (req, res) => {
       });
     }
 
-    // ❌ Remove refresh token from DB
     await user.update({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
-    // 🍪 CLEAR COOKIES
-    res.clearCookie("accessToken", {
-      httpOnly: true,
-      secure: true,
-      sameSite: "None",
+      access_token: null,
+      refresh_token: null,
     });
 
-    res.clearCookie("refreshToken", {
-      httpOnly: true,
-      secure: true,
-      sameSite: "None",
-    });
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
 
     return res.json({
       success: true,
@@ -265,7 +256,14 @@ export const refreshAccessToken = async (req, res) => {
       });
     }
 
-    const user = await User.findByPk(decoded.userId); // ✅ INTEGER
+    if (!isValidInteger(decoded.userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid token userId (must be integer)",
+      });
+    }
+
+    const user = await User.findByPk(Number(decoded.userId));
 
     if (!user) {
       return res.status(404).json({
