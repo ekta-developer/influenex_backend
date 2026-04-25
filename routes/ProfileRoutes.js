@@ -3,27 +3,25 @@ import upload from "../middleware/ProfileUpload.js";
 import {
   createProfile,
   getAllProfiles,
-  getProfileById,
   updateProfile,
   deleteProfile,
+  getMyProfile,
 } from "../controller/ProfileController.js";
 import { verifyToken } from "../middleware/AuthMiddleware.js";
 
 const router = express.Router();
 
-// Create Profile
+// Create
 router.post("/", upload.single("profileImage"), verifyToken, createProfile);
 
-// Get All
-router.get("/",verifyToken, getAllProfiles);
+// ✅ Specific route FIRST
+router.get("/me", verifyToken, getMyProfile);
 
-// Get By ID
-router.get("/:id",verifyToken, getProfileById);
+// Get all
+router.get("/", verifyToken, getAllProfiles);
 
-// Update
-router.put("/:id", upload.single("profileImage"),verifyToken, updateProfile);
-
-// Delete
-router.delete("/:id",verifyToken, deleteProfile);
+// ✅ Dynamic LAST (no regex)
+router.put("/:id", upload.single("profileImage"), verifyToken, updateProfile);
+router.delete("/:id", verifyToken, deleteProfile);
 
 export default router;

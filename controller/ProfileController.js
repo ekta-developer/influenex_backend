@@ -23,6 +23,7 @@ export const createProfile = async (req, res) => {
 
     const profile = await Profile.create({
       name,
+      user_id: req.user.userId,
       businessName,
       businessCategories,
       headQuarters,
@@ -52,7 +53,9 @@ export const createProfile = async (req, res) => {
 // ✅ GET All Profiles
 export const getAllProfiles = async (req, res) => {
   try {
-    const profiles = await Profile.findAll();
+    const profiles = await Profile.findAll({
+      where: { user_id: req.user.userId },
+    });
 
     res.json({
       success: true,
@@ -63,10 +66,12 @@ export const getAllProfiles = async (req, res) => {
   }
 };
 
-// ✅ GET Profile By ID
-export const getProfileById = async (req, res) => {
+// ✅ GET My Profile (/me)
+export const getMyProfile = async (req, res) => {
   try {
-    const profile = await Profile.findByPk(req.params.id);
+    const profile = await Profile.findOne({
+      where: { user_id: req.user.userId },
+    });
 
     if (!profile) {
       return res.status(404).json({
@@ -75,16 +80,32 @@ export const getProfileById = async (req, res) => {
       });
     }
 
-    res.json({ success: true, data: profile });
+    res.json({
+      success: true,
+      data: profile,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
   }
 };
 
 // ✅ UPDATE Profile
 export const updateProfile = async (req, res) => {
   try {
-    const profile = await Profile.findByPk(req.params.id);
+    const { id } = req.params;
+
+    // ✅ FIX: Prevent "me" or invalid values
+    if (isNaN(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID",
+      });
+    }
+
+    const profile = await Profile.findByPk(id);
 
     if (!profile) {
       return res.status(404).json({
@@ -93,14 +114,25 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    // Delete old image if new one uploaded
-    if (req.file && profile.profileImage) {
-      fs.unlinkSync(profile.profileImage);
+    // ✅ SECURITY CHECK
+    if (profile.user_id !== req.user.userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
     }
 
-    const updatedData = {
-      ...req.body,
-    };
+    // ✅ Safe delete old image
+    if (req.file && profile.profileImage) {
+      if (fs.existsSync(profile.profileImage)) {
+        fs.unlinkSync(profile.profileImage);
+      }
+    }
+
+    const updatedData = { ...req.body };
+
+    // ❌ Prevent user_id override
+    delete updatedData.user_id;
 
     if (req.file) {
       updatedData.profileImage = req.file.path;
@@ -121,7 +153,17 @@ export const updateProfile = async (req, res) => {
 // ✅ DELETE Profile
 export const deleteProfile = async (req, res) => {
   try {
-    const profile = await Profile.findByPk(req.params.id);
+    const { id } = req.params;
+
+    // ✅ FIX: Prevent invalid ID
+    if (isNaN(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID",
+      });
+    }
+
+    const profile = await Profile.findByPk(id);
 
     if (!profile) {
       return res.status(404).json({
@@ -130,8 +172,16 @@ export const deleteProfile = async (req, res) => {
       });
     }
 
-    // Delete image from folder
-    if (profile.profileImage) {
+    // ✅ Optional: Add security check (recommended)
+    if (profile.user_id !== req.user.userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    // ✅ Safe delete image
+    if (profile.profileImage && fs.existsSync(profile.profileImage)) {
       fs.unlinkSync(profile.profileImage);
     }
 
