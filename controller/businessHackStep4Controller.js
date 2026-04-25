@@ -3,7 +3,7 @@ import BusinessHack from "../models/BusinessHacks.js";
 import multer from "multer";
 import fs from "fs";
 
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = "http://13.201.88.246:5000";
 
 // 🔧 Format single file path
 const formatFileUrl = (filePath) => {
