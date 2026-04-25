@@ -310,6 +310,29 @@ export const getInfluencerById = async (req, res) => {
   }
 };
 
+//get influencer by user_id
+export const getInfluencerByUserId = async (req, res) => {
+  try {
+    const userId = req.user.id; // from token
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID not found in token" });
+    }
+
+    const influencer = await Influencer.findOne({
+      where: { userId }, // ✅ FIXED (camelCase)
+    });
+
+    if (!influencer) {
+      return res.status(404).json({ message: "Influencer not found" });
+    }
+
+    return res.status(200).json(influencer);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
 // GET ALL
 export const getAllInfluencers = async (req, res) => {
   try {

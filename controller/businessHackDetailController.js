@@ -16,22 +16,35 @@ export const createBusinessHackDetail = async (req, res) => {
       freeProduct,
     } = req.body;
 
-    // Check Step-1 exists
-    const campaign = await BusinessHack.findByPk(businessHackId);
+    // 🔐 Step-1 ownership check
+    const campaign = await BusinessHack.findOne({
+      where: {
+        id: businessHackId,
+        user_id: req.user.userId,
+      },
+    });
+
     if (!campaign) {
-      return res.status(404).json({
+      return res.status(403).json({
         success: false,
-        message: "Business Hack not found",
+        message: "Unauthorized or Business Hack not found",
       });
     }
 
-    const baseAmount = costPerInfluencer * numberOfInfluencersRequired;
+    // 🚫 Prevent duplicate Step-2
+    const existing = await BusinessHackDetail.findOne({
+      where: { businessHackId },
+    });
 
-    const taxAmount = (baseAmount * tax) / 100;
-
-    const totalBudget = baseAmount + taxAmount;
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        message: "Step-2 already exists for this campaign",
+      });
+    }
 
     const detail = await BusinessHackDetail.create({
+      user_id: req.user.userId,
       businessHackId,
       noOfReels,
       noOfPosts,
@@ -40,16 +53,13 @@ export const createBusinessHackDetail = async (req, res) => {
       minimumFollowersRequired,
       costPerInfluencer,
       tax,
-      totalBudget,
       freeProduct,
     });
 
     res.status(201).json({
-      response: {
-        success: true,
-        message: "Business Hack Step-2 created successfully",
-        ...detail.dataValues,
-      },
+      success: true,
+      message: "Business Hack Step-2 created successfully",
+      data: detail,
     });
   } catch (error) {
     res.status(500).json({
@@ -58,11 +68,13 @@ export const createBusinessHackDetail = async (req, res) => {
     });
   }
 };
-
 // ✅ GET ALL
 export const getAllBusinessHackDetails = async (req, res) => {
   try {
     const details = await BusinessHackDetail.findAll({
+      where: {
+        user_id: req.user.userId,
+      },
       include: BusinessHack,
       order: [["id", "DESC"]],
     });
@@ -82,8 +94,17 @@ export const getAllBusinessHackDetails = async (req, res) => {
 // ✅ GET SINGLE
 export const getBusinessHackDetailById = async (req, res) => {
   try {
-    const detail = await BusinessHackDetail.findByPk(req.params.id, {
-      include: BusinessHack,
+    const detail = await BusinessHackDetail.findOne({
+      where: {
+        id: req.params.id,
+        user_id: req.user.userId,
+      },
+      include: {
+        model: BusinessHack,
+        where: {
+          user_id: req.user.userId, // 🔐 double security
+        },
+      },
     });
 
     if (!detail) {
@@ -108,12 +129,23 @@ export const getBusinessHackDetailById = async (req, res) => {
 // ✅ UPDATE
 export const updateBusinessHackDetail = async (req, res) => {
   try {
-    const detail = await BusinessHackDetail.findByPk(req.params.id);
+    const detail = await BusinessHackDetail.findOne({
+      where: {
+        id: req.params.id,
+        user_id: req.user.userId,
+      },
+      include: {
+        model: BusinessHack,
+        where: {
+          user_id: req.user.userId, // 🔐 parent ownership check
+        },
+      },
+    });
 
     if (!detail) {
       return res.status(404).json({
         success: false,
-        message: "Detail not found",
+        message: "Detail not found or unauthorized",
       });
     }
 
@@ -128,6 +160,7 @@ export const updateBusinessHackDetail = async (req, res) => {
       freeProduct,
     } = req.body;
 
+    // ✅ Safe updated values
     const updatedInfluencers =
       numberOfInfluencersRequired ?? detail.numberOfInfluencersRequired;
 
@@ -135,20 +168,24 @@ export const updateBusinessHackDetail = async (req, res) => {
 
     const updatedTax = tax ?? detail.tax;
 
+    // ✅ Recalculate budget (never trust frontend)
     const baseAmount = updatedCPI * updatedInfluencers;
     const taxAmount = (baseAmount * updatedTax) / 100;
     const totalBudget = baseAmount + taxAmount;
 
-    detail.noOfReels = noOfReels ?? detail.noOfReels;
-    detail.noOfPosts = noOfPosts ?? detail.noOfPosts;
-    detail.noOfStories = noOfStories ?? detail.noOfStories;
-    detail.numberOfInfluencersRequired = updatedInfluencers;
-    detail.minimumFollowersRequired =
-      minimumFollowersRequired ?? detail.minimumFollowersRequired;
-    detail.costPerInfluencer = updatedCPI;
-    detail.tax = updatedTax;
-    detail.totalBudget = totalBudget;
-    detail.freeProduct = freeProduct ?? detail.freeProduct;
+    // ✅ Assign values
+    Object.assign(detail, {
+      noOfReels: noOfReels ?? detail.noOfReels,
+      noOfPosts: noOfPosts ?? detail.noOfPosts,
+      noOfStories: noOfStories ?? detail.noOfStories,
+      numberOfInfluencersRequired: updatedInfluencers,
+      minimumFollowersRequired:
+        minimumFollowersRequired ?? detail.minimumFollowersRequired,
+      costPerInfluencer: updatedCPI,
+      tax: updatedTax,
+      totalBudget,
+      freeProduct: freeProduct ?? detail.freeProduct,
+    });
 
     await detail.save();
 
@@ -168,12 +205,23 @@ export const updateBusinessHackDetail = async (req, res) => {
 // ✅ DELETE
 export const deleteBusinessHackDetail = async (req, res) => {
   try {
-    const detail = await BusinessHackDetail.findByPk(req.params.id);
+    const detail = await BusinessHackDetail.findOne({
+      where: {
+        id: req.params.id,
+        user_id: req.user.userId,
+      },
+      include: {
+        model: BusinessHack,
+        where: {
+          user_id: req.user.userId, // 🔐 parent ownership check
+        },
+      },
+    });
 
     if (!detail) {
       return res.status(404).json({
         success: false,
-        message: "Detail not found",
+        message: "Detail not found or unauthorized",
       });
     }
 

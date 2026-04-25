@@ -1,6 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 import xss from "xss";
+import { validate as isUUID } from "uuid";
 
 const BusinessHack = sequelize.define(
   "BusinessHack",
@@ -73,9 +74,7 @@ function sanitizeBusinessHack(data) {
 
   // safer number conversion
   if (data.user_id !== undefined) {
-    data.user_id = Number(data.user_id);
-
-    if (Number.isNaN(data.user_id)) {
+    if (!isUUID(data.user_id)) {
       throw new Error("Invalid user_id");
     }
   }

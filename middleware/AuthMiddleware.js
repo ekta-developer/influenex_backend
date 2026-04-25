@@ -5,7 +5,8 @@ const JWT_SECRET = process.env.JWT_SECRET || "yourSecretKey";
 export const verifyToken = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    console.log("AUTH HEADER:", authHeader); // 👈 ADD THIS
+
+    console.log("AUTH HEADER:", authHeader);
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
@@ -17,26 +18,18 @@ export const verifyToken = (req, res, next) => {
     const token = authHeader.split(" ")[1];
 
     const decoded = jwt.verify(token, JWT_SECRET);
-    console.log("DECODED:", decoded); // 👈 ADD THIS
 
-    req.user = decoded;
+    console.log("DECODED TOKEN:", decoded);
+
+    req.user = decoded; // ✅ VERY IMPORTANT
 
     next();
-  } catch (error) {
-    console.log("JWT ERROR:", error.message);
-
-    // ✅ Clean error handling
-    if (error.name === "TokenExpiredError") {
-      return res.status(401).json({
-        success: false,
-        message: "Token expired",
-        tokenExpired: true, // 👈 IMPORTANT
-      });
-    }
+  } catch (err) {
+    console.error("JWT ERROR:", err.message);
 
     return res.status(401).json({
       success: false,
-      message: "Invalid token",
+      message: "Invalid or expired token",
     });
   }
 };

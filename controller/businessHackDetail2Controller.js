@@ -30,7 +30,7 @@ export const createBusinessHackStep3 = async (req, res) => {
 
     dos = normalizeArray(dos);
     donts = normalizeArray(donts);
-    gender = normalizeGender(gender); // ✅ FIXED
+    gender = normalizeGender(gender);
 
     if (!gender || gender.length === 0) {
       return res.status(400).json({
@@ -60,16 +60,35 @@ export const createBusinessHackStep3 = async (req, res) => {
       });
     }
 
-    const campaign = await BusinessHack.findByPk(businessHackId);
+    // 🔐 Step-1 ownership check
+    const campaign = await BusinessHack.findOne({
+      where: {
+        id: businessHackId,
+        user_id: req.user.userId,
+      },
+    });
 
     if (!campaign) {
-      return res.status(404).json({
+      return res.status(403).json({
         success: false,
-        message: "Business Hack not found",
+        message: "Unauthorized or Business Hack not found",
+      });
+    }
+
+    // 🚫 Prevent duplicate Step-3
+    const existing = await BusinessHackStep3.findOne({
+      where: { businessHackId },
+    });
+
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        message: "Step-3 already exists for this campaign",
       });
     }
 
     const step3 = await BusinessHackStep3.create({
+      user_id: req.user.userId, // ✅ IMPORTANT
       businessHackId,
       influencerCategory,
       gender,
@@ -83,11 +102,9 @@ export const createBusinessHackStep3 = async (req, res) => {
     });
 
     res.status(201).json({
-      response: {
-        success: true,
-        message: "Business Hack Step-3 created successfully",
-        data: step3,
-      },
+      success: true,
+      message: "Business Hack Step-3 created successfully",
+      data: step3,
     });
   } catch (error) {
     res.status(500).json({
@@ -100,8 +117,14 @@ export const createBusinessHackStep3 = async (req, res) => {
 export const getAllBusinessHackStep3 = async (req, res) => {
   try {
     const data = await BusinessHackStep3.findAll({
+      where: {
+        user_id: req.user.userId,
+      },
       include: {
         model: BusinessHack,
+        where: {
+          user_id: req.user.userId,
+        },
         attributes: ["id", "businessName"],
       },
       order: [["id", "DESC"]],
@@ -122,9 +145,16 @@ export const getAllBusinessHackStep3 = async (req, res) => {
 // ✅ GET SINGLE
 export const getBusinessHackStep3ById = async (req, res) => {
   try {
-    const data = await BusinessHackStep3.findByPk(req.params.id, {
+    const data = await BusinessHackStep3.findOne({
+      where: {
+        id: req.params.id,
+        user_id: req.user.userId,
+      },
       include: {
         model: BusinessHack,
+        where: {
+          user_id: req.user.userId,
+        },
         attributes: ["id", "businessName"],
       },
     });
@@ -151,12 +181,23 @@ export const getBusinessHackStep3ById = async (req, res) => {
 // ✅ UPDATE
 export const updateBusinessHackStep3 = async (req, res) => {
   try {
-    const step3 = await BusinessHackStep3.findByPk(req.params.id);
+    const step3 = await BusinessHackStep3.findOne({
+      where: {
+        id: req.params.id,
+        user_id: req.user.userId,
+      },
+      include: {
+        model: BusinessHack,
+        where: {
+          user_id: req.user.userId,
+        },
+      },
+    });
 
     if (!step3) {
       return res.status(404).json({
         success: false,
-        message: "Step-3 not found",
+        message: "Step-3 not found or unauthorized",
       });
     }
 
@@ -175,7 +216,6 @@ export const updateBusinessHackStep3 = async (req, res) => {
     dos = normalizeArray(dos) ?? step3.dos;
     donts = normalizeArray(donts) ?? step3.donts;
 
-    // ✅ Normalize gender only if provided
     let updatedGender = step3.gender;
     if (gender !== undefined) {
       updatedGender = normalizeGender(gender);
@@ -183,7 +223,7 @@ export const updateBusinessHackStep3 = async (req, res) => {
       if (!updatedGender || updatedGender.length === 0) {
         return res.status(400).json({
           success: false,
-          message: "At least one valid gender must be selected",
+          message: "Invalid gender",
         });
       }
     }
@@ -198,16 +238,17 @@ export const updateBusinessHackStep3 = async (req, res) => {
       });
     }
 
-    step3.influencerCategory = influencerCategory ?? step3.influencerCategory;
-    step3.gender = updatedGender; // ✅ FIXED
-    step3.minAge = updatedMinAge;
-    step3.maxAge = updatedMaxAge;
-    step3.campaignDescription =
-      campaignDescription ?? step3.campaignDescription;
-    step3.dos = dos;
-    step3.donts = donts;
-    step3.isDosRequired = isDosRequired ?? step3.isDosRequired;
-    step3.isDontsRequired = isDontsRequired ?? step3.isDontsRequired;
+    Object.assign(step3, {
+      influencerCategory: influencerCategory ?? step3.influencerCategory,
+      gender: updatedGender,
+      minAge: updatedMinAge,
+      maxAge: updatedMaxAge,
+      campaignDescription: campaignDescription ?? step3.campaignDescription,
+      dos,
+      donts,
+      isDosRequired: isDosRequired ?? step3.isDosRequired,
+      isDontsRequired: isDontsRequired ?? step3.isDontsRequired,
+    });
 
     await step3.save();
 
@@ -223,6 +264,7 @@ export const updateBusinessHackStep3 = async (req, res) => {
     });
   }
 };
+
 // ✅ DELETE
 export const deleteBusinessHackStep3 = async (req, res) => {
   try {

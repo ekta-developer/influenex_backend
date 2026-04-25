@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 
 // const BASE_URL = "http://localhost:5000/";
-const BASE_URL = "http://13.201.88.246";
+const BASE_URL = "http://13.201.88.246/";
 
 const imagePath = "uploads/BusinessHacksMedia/thumbnails";
 const videoPath = "uploads/BusinessHacksMedia/videos";

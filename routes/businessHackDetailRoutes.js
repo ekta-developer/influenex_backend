@@ -6,13 +6,14 @@ import {
   updateBusinessHackDetail,
   deleteBusinessHackDetail,
 } from "../controller/businessHackDetailController.js";
+import { verifyToken } from "../middleware/AuthMiddleware.js";
 
 const router = express.Router();
 
-router.post("/create", createBusinessHackDetail);
-router.get("/", getAllBusinessHackDetails);
-router.get("/:id", getBusinessHackDetailById);
-router.put("/:id", updateBusinessHackDetail);
-router.delete("/:id", deleteBusinessHackDetail);
+router.post("/create", verifyToken, createBusinessHackDetail);
+router.get("/", verifyToken, getAllBusinessHackDetails);
+router.get("/:id", verifyToken, getBusinessHackDetailById);
+router.put("/:id", verifyToken, updateBusinessHackDetail);
+router.delete("/:id", verifyToken, deleteBusinessHackDetail);
 
 export default router;

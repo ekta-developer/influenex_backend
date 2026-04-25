@@ -152,7 +152,7 @@ console.log("ENV CHECK --->", process.env.RUN_SEEDER);
 /* ================== 🚀 SERVER START ================== */
 const startServer = async () => {
   try {
-    await sequelize.authenticate();
+    await   sequelize.authenticate();
     console.log("✅ Database connected successfully");
 
     await sequelize.sync(); // ❌ REMOVE force:true on live

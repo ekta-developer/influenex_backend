@@ -153,7 +153,8 @@ export const verifyOtp = async (req, res) => {
     // 🎟️ TOKENS USING USER TABLE ID (IMPORTANT)
     // ====================================================
     const payload = {
-      userId: dbUser.id, // ✅ FIXED (INTEGER)
+      userId: dbUser.id,
+      uuid: dbUser.uuid, // ✅ ADD THIS
       phone,
       userType,
     };
@@ -162,9 +163,9 @@ export const verifyOtp = async (req, res) => {
     const refreshToken = generateRefreshToken(payload);
 
     // ✅ SAVE TOKENS IN USER TABLE
-    await user.update({
-      access_token: null,
-      refresh_token: null,
+    await dbUser.update({
+      access_token: accessToken,
+      refresh_token: refreshToken,
     });
 
     return res.json({

@@ -18,6 +18,7 @@ const BusinessHackDetail = sequelize.define(
         key: "id",
       },
       onDelete: "CASCADE",
+      unique: true, // 1-to-1 relationship
     },
 
     // Deliverables
@@ -113,6 +114,12 @@ const BusinessHackDetail = sequelize.define(
     timestamps: true,
 
     hooks: {
+      beforeValidate: (data, options) => {
+        if (!data.user_id && options.userId) {
+          data.user_id = options.userId;
+        }
+      },
+
       beforeCreate: (data) => {
         sanitizeData(data);
         calculateBudget(data);

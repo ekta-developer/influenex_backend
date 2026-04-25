@@ -105,7 +105,7 @@ export const createInfluencer = async (req, res) => {
 // ✅ GET All Influencers
 export const getAllInfluencers = async (req, res) => {
   try {
-    const influencers = await Influencer.findAll();
+    const influencers = await influencersUser.findAll(); // 🔥 FIXED
 
     res.status(200).json({
       success: true,
@@ -122,7 +122,7 @@ export const getAllInfluencers = async (req, res) => {
 // ✅ GET Influencer by ID
 export const getInfluencerById = async (req, res) => {
   try {
-    const influencer = await Influencer.findByPk(req.params.id);
+    const influencer = await influencersUser.findByPk(req.params.id);
 
     if (!influencer) {
       return res.status(404).json({
@@ -145,7 +145,7 @@ export const getInfluencerById = async (req, res) => {
 // ✅ UPDATE Influencer
 export const updateInfluencer = async (req, res) => {
   try {
-    const influencer = await Influencer.findByPk(req.params.id);
+    const influencer = await influencersUser.findByPk(req.params.id);
 
     if (!influencer) {
       return res.status(404).json({
@@ -171,7 +171,7 @@ export const updateInfluencer = async (req, res) => {
 // ✅ DELETE Influencer
 export const deleteInfluencer = async (req, res) => {
   try {
-    const influencer = await Influencer.findByPk(req.params.id);
+    const influencer = await influencersUser.findByPk(req.params.id);
 
     if (!influencer) {
       return res.status(404).json({
