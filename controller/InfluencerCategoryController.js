@@ -21,6 +21,7 @@ export const createCategory = async (req, res) => {
 
     const categoryData = categories.map((name) => ({
       influencer_id,
+      user_id: null, // ✅ explicitly passing null
       categoryName: name,
     }));
 
