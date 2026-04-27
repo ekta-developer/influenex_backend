@@ -1,6 +1,5 @@
 import Product from "../models/Product.js";
 import fs from "fs";
-
 const BASE_URL = "http://localhost:5000/";
 
 // ================= CREATE =================
@@ -11,6 +10,7 @@ export const createProduct = async (req, res) => {
     const image = req.file ? req.file.path : null;
 
     const product = await Product.create({
+      user_id: req.user.userId, // ✅ AUTO FROM TOKEN
       productName,
       productDescription,
       productQuantity,
@@ -35,13 +35,14 @@ export const createProduct = async (req, res) => {
 // ================= READ ALL =================
 export const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.findAll();
+    const products = await Product.findAll({
+      where: { user_id: req.user.userId },
+    });
 
     const formattedProducts = products.map((product) => {
       const data = product.toJSON();
       if (data.productImage) {
-        data.productImage =
-          BASE_URL + data.productImage.replace(/\\/g, "/");
+        data.productImage = BASE_URL + data.productImage.replace(/\\/g, "/");
       }
       return data;
     });
@@ -78,10 +79,18 @@ export const getProductById = async (req, res) => {
 // ================= UPDATE =================
 export const updateProduct = async (req, res) => {
   try {
-    const product = await Product.findByPk(req.params.id);
+    const product = await Product.findOne({
+      where: {
+        id: req.params.id,
+        user_id: req.user.userId, // ✅ ownership check
+      },
+    });
 
     if (!product) {
-      return res.status(404).json({ success: false, message: "Not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Product not found or unauthorized",
+      });
     }
 
     // Delete old image if new uploaded
@@ -92,15 +101,15 @@ export const updateProduct = async (req, res) => {
     }
 
     await product.update({
-      productName: req.body.productName || product.productName,
+      productName: req.body.productName ?? product.productName,
       productDescription:
-        req.body.productDescription || product.productDescription,
-      productQuantity:
-        req.body.productQuantity || product.productQuantity,
+        req.body.productDescription ?? product.productDescription,
+      productQuantity: req.body.productQuantity ?? product.productQuantity,
       productImage: req.file ? req.file.path : product.productImage,
     });
 
     const data = product.toJSON();
+
     if (data.productImage) {
       data.productImage = BASE_URL + data.productImage.replace(/\\/g, "/");
     }
@@ -108,7 +117,7 @@ export const updateProduct = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Updated successfully",
-      data: data,
+      data,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -118,10 +127,18 @@ export const updateProduct = async (req, res) => {
 // ================= DELETE =================
 export const deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findByPk(req.params.id);
+    const product = await Product.findOne({
+      where: {
+        id: req.params.id,
+        user_id: req.user.userId, // ✅ ownership check
+      },
+    });
 
     if (!product) {
-      return res.status(404).json({ success: false, message: "Not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Product not found or unauthorized",
+      });
     }
 
     // delete image safely
