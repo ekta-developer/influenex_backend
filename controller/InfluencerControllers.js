@@ -4,6 +4,7 @@ import slugify from "slugify";
 import { convertToString } from "../HelperFunction/Helper.js";
 import path from "path";
 import fs from "fs";
+import { validate as isUUID } from "uuid";
 
 export const createInfluencer = async (req, res) => {
   const transaction = await sequelize.transaction();
@@ -145,6 +146,16 @@ export const updateInfluencer = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // ✅ 1. VALIDATE UUID (MAIN FIX)
+    if (!isUUID(id)) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Invalid influencer ID (UUID required)",
+      });
+    }
+
+    // ✅ 2. FIND RECORD
     const influencer = await Influencer.findByPk(id);
 
     if (!influencer) {
@@ -170,6 +181,7 @@ export const updateInfluencer = async (req, res) => {
       contentCategories,
     } = req.body;
 
+    // ✅ ARRAY PARSER
     const parseArray = (field) => {
       if (!field) return [];
       if (Array.isArray(field)) return field;
@@ -185,14 +197,18 @@ export const updateInfluencer = async (req, res) => {
       }
     };
 
-    const parsedFollowers = followersCount
-      ? Number(followersCount)
-      : influencer.followersCount;
+    // ✅ SAFE NUMBER PARSE
+    const parsedFollowers =
+      followersCount !== undefined
+        ? Number(followersCount)
+        : influencer.followersCount;
 
-    const parsedEngagement = engagementRate
-      ? Number(engagementRate)
-      : influencer.engagementRate;
+    const parsedEngagement =
+      engagementRate !== undefined
+        ? Number(engagementRate)
+        : influencer.engagementRate;
 
+    // ✅ UNIQUE CHECK
     if (
       instagramUsername &&
       instagramUsername !== influencer.instagramUsername
@@ -210,6 +226,7 @@ export const updateInfluencer = async (req, res) => {
       }
     }
 
+    // ✅ IMAGE UPDATE
     let profilePhoto = influencer.profilePhoto;
 
     if (req.file) {
@@ -225,6 +242,7 @@ export const updateInfluencer = async (req, res) => {
       profilePhoto = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
     }
 
+    // ✅ SLUG UPDATE
     const updatedSlug =
       fullName || instagramUsername
         ? slugify(
@@ -235,8 +253,9 @@ export const updateInfluencer = async (req, res) => {
           )
         : influencer.slug;
 
-    // ✅ FIX GENDER
+    // ✅ GENDER FIX
     let formattedGender = influencer.gender;
+
     if (gender) {
       const temp =
         gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase();
@@ -254,6 +273,7 @@ export const updateInfluencer = async (req, res) => {
       formattedGender = temp;
     }
 
+    // ✅ UPDATE
     await influencer.update(
       {
         fullName: fullName || influencer.fullName,
@@ -270,10 +290,7 @@ export const updateInfluencer = async (req, res) => {
           ? parseArray(portfolioLinks)
           : influencer.portfolioLinks,
         languages: languages ? parseArray(languages) : influencer.languages,
-
-        // ✅ IMPORTANT FIX
         gender: formattedGender,
-
         contentCategories: contentCategories
           ? parseArray(contentCategories)
           : influencer.contentCategories,
@@ -291,20 +308,33 @@ export const updateInfluencer = async (req, res) => {
   } catch (error) {
     console.error("UPDATE ERROR:", error);
     await transaction.rollback();
+
     return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
-// GET BY ID
-export const getInfluencerById = async (req, res) => {
-  try {
-    const influencer = await Influencer.findByPk(req.params.id);
-    if (!influencer)
-      return res.status(404).json({ message: "Influencer not found" });
 
-    res.status(200).json(influencer);
+
+// GET BY ID
+export const getMyInfluencer = async (req, res) => {
+  try {
+    const influencer = await Influencer.findOne({
+      where: { userId: req.user.userId },
+    });
+
+    if (!influencer) {
+      return res.status(200).json({
+        success: false,
+        message: "Influencer not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: influencer,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

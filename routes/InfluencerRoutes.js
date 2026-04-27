@@ -2,7 +2,7 @@ import express from "express";
 import {
   createInfluencer,
   getAllInfluencers,
-  getInfluencerById,
+  getMyInfluencer,
   updateInfluencer,
   deleteInfluencer,
 } from "../controller/InfluencerControllers.js";
@@ -12,7 +12,7 @@ const router = express.Router();
 
 router.post("/create", upload.single("profilePhoto"),verifyToken, createInfluencer);
 router.get("/", verifyToken,getAllInfluencers);
-router.get("/:id",verifyToken, getInfluencerById);
+router.get("/me",verifyToken, getMyInfluencer);
 router.put("/:id", upload.single('profilePhoto'),verifyToken, updateInfluencer);
 router.delete("/:id",verifyToken, deleteInfluencer);
 

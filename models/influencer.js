@@ -40,8 +40,7 @@ const Influencer = sequelize.define(
     profilePhoto: {
       type: DataTypes.STRING,
       validate: {
-        len: [0, 255],
-        is: /^[a-zA-Z0-9._/-]*$/i, // safe file path
+        len: [0, 500], // increase length if needed
       },
     },
 
