@@ -74,20 +74,20 @@ export const getMyProfile = async (req, res) => {
     });
 
     if (!profile) {
-      return res.status(404).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: "Profile not found",
       });
     }
 
-    res.json({
+    return res.status(200).json({
       success: true,
       data: profile,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      error: error.message,
+      message: error.message,
     });
   }
 };
