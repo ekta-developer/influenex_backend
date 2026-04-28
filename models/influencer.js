@@ -23,7 +23,8 @@ const Influencer = sequelize.define(
     userId: {
       type: DataTypes.UUID,
       allowNull: false,
-      field: "user_id", // 🔥 VERY IMPORTANT FIX
+      unique: true, // ✅ THIS LINE FIXES EVERYTHING
+      field: "user_id",
     },
 
     slug: {
@@ -122,6 +123,25 @@ const Influencer = sequelize.define(
       type: DataTypes.ARRAY(DataTypes.STRING),
       defaultValue: Sequelize.literal("ARRAY[]::TEXT[]"),
     },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+      validate: {
+        isEmail: true,
+        notEmpty: true,
+        len: [5, 150],
+      },
+    },
+
+    dob: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+      validate: {
+        isDate: true,
+        isBefore: new Date().toISOString(), // DOB must be in past
+      },
+    },
   },
   {
     timestamps: true,
@@ -152,6 +172,8 @@ function sanitizeInfluencer(data) {
 
   if (data.city) data.city = xss(data.city.trim());
   if (data.bio) data.bio = xss(data.bio);
+  if (data.email) data.email = xss(data.email.trim().toLowerCase());
+  if (data.dob) data.dob = xss(data.dob);
 
   // sanitize arrays
   const arrayFields = [
@@ -184,12 +206,11 @@ function sanitizeInfluencer(data) {
   if (data.rateCard !== undefined) {
     data.rateCard = Number(data.rateCard);
   }
-
-  Influencer.associate = (models) => {
-    Influencer.belongsTo(models.User, {
-      foreignKey: "userId",
-    });
-  };
 }
+Influencer.associate = (models) => {
+  Influencer.belongsTo(models.User, {
+    foreignKey: "userId",
+  });
+};
 
 export default Influencer;

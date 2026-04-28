@@ -107,3 +107,29 @@ export const formatImagePath = (filePath) => {
   // 3. Return full URL
   return `${BASE_URL}/${cleanPath}`;
 };
+
+//parsing arrays from form data (comma separated or JSON string)
+export const parseArray = (field) => {
+  if (!field) return [];
+  if (Array.isArray(field)) return field;
+
+  if (typeof field === "string" && !field.startsWith("[")) {
+    return field.split(",").map((item) => item.trim());
+  }
+
+  try {
+    return JSON.parse(field);
+  } catch {
+    return [];
+  }
+};
+// Format gender
+export const formatGender = (gender) => {
+  if (!gender) return null;
+
+  const formatted =
+    gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase();
+
+  const valid = ["Male", "Female", "Other"];
+  return valid.includes(formatted) ? formatted : null;
+};
