@@ -63,7 +63,6 @@ const Product = sequelize.define(
             throw new Error("Invalid file path");
           }
         },
-        is: /^[a-zA-Z0-9._/-]*$/i, // safe path pattern
       },
     },
   },
@@ -77,7 +76,7 @@ const Product = sequelize.define(
 
     hooks: {
       beforeValidate: (data) => {
-        sanitizeProduct(data);
+        sanitizeProduct(data.dataValues);
       },
     },
   },
@@ -104,10 +103,6 @@ function sanitizeProduct(data) {
     if (Number.isNaN(data.productQuantity) || data.productQuantity < 0) {
       data.productQuantity = 0;
     }
-  }
-
-  if (data.id !== undefined) {
-    data.id = Number(data.id);
   }
 }
 

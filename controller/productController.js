@@ -5,12 +5,18 @@ const BASE_URL = "http://localhost:5000/";
 // ================= CREATE =================
 export const createProduct = async (req, res) => {
   try {
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
+    console.log("USER:", req.user);
+
     const { productName, productDescription, productQuantity } = req.body;
 
-    const image = req.file ? req.file.path : null;
+    const image = req.file
+      ? req.file.path.replace(/\\/g, "/") // ✅ normalize path
+      : null;
 
     const product = await Product.create({
-      user_id: req.user.userId, // ✅ AUTO FROM TOKEN
+      user_id: req.user.userId,
       productName,
       productDescription,
       productQuantity,
@@ -18,20 +24,32 @@ export const createProduct = async (req, res) => {
     });
 
     const data = product.toJSON();
+
     if (data.productImage) {
-      data.productImage = BASE_URL + data.productImage.replace(/\\/g, "/");
+      data.productImage = BASE_URL + data.productImage;
     }
 
     res.status(201).json({
       success: true,
       message: "Product created successfully",
-      data: data,
+      data,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.log("FULL ERROR:", error);
+
+    if (error.name === "SequelizeValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: error.errors.map((e) => e.message), // ✅ REAL ERROR HERE
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
-
 // ================= READ ALL =================
 export const getAllProducts = async (req, res) => {
   try {
@@ -59,23 +77,31 @@ export const getAllProducts = async (req, res) => {
 // ================= READ ONE =================
 export const getProductById = async (req, res) => {
   try {
-    const product = await Product.findByPk(req.params.id);
+    const product = await Product.findOne({
+      where: {
+        id: req.params.id,
+        user_id: req.user.userId, // ✅ FIX
+      },
+    });
 
     if (!product) {
-      return res.status(404).json({ success: false, message: "Not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Not found",
+      });
     }
 
     const data = product.toJSON();
+
     if (data.productImage) {
-      data.productImage = BASE_URL + data.productImage.replace(/\\/g, "/");
+      data.productImage = BASE_URL + data.productImage;
     }
 
-    res.status(200).json({ success: true, data: data });
+    res.status(200).json({ success: true, data });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 // ================= UPDATE =================
 export const updateProduct = async (req, res) => {
   try {
