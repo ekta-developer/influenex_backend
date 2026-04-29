@@ -16,14 +16,6 @@ export const createInfluencer = async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    if (influencer.user_id !== req.user.userId) {
-      await transaction.rollback();
-      return res.status(403).json({
-        success: false,
-        message: "Unauthorized to update this influencer",
-      });
-    }
-
     const exists = await Influencer.findOne({
       where: { userId }, // ✅ use model field
     });
