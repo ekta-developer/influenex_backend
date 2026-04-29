@@ -16,11 +16,11 @@ export const createInfluencer = async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    if (!userId) {
+    if (influencer.user_id !== req.user.userId) {
       await transaction.rollback();
-      return res.status(401).json({
+      return res.status(403).json({
         success: false,
-        message: "Unauthorized",
+        message: "Unauthorized to update this influencer",
       });
     }
 
@@ -101,7 +101,6 @@ export const updateInfluencer = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // ✅ 1. VALIDATE UUID (MAIN FIX)
     if (!isUUID(id)) {
       await transaction.rollback();
       return res.status(400).json({
@@ -110,17 +109,9 @@ export const updateInfluencer = async (req, res) => {
       });
     }
 
-    // ✅ 2. FIND RECORD
     const influencer = await Influencer.findByPk(id);
 
-    if (influencer.user_id !== req.user.userId) {
-      await transaction.rollback();
-      return res.status(403).json({
-        success: false,
-        message: "Unauthorized to update this influencer",
-      });
-    }
-
+    // ✅ FIRST check existence
     if (!influencer) {
       await transaction.rollback();
       return res.status(404).json({
@@ -128,6 +119,8 @@ export const updateInfluencer = async (req, res) => {
         message: "Influencer not found",
       });
     }
+
+    // ❌ 403 CHECK REMOVED HERE
 
     const {
       fullName,
@@ -146,7 +139,6 @@ export const updateInfluencer = async (req, res) => {
       contentCategories,
     } = req.body;
 
-    // ✅ ARRAY PARSER
     const parseArray = (field) => {
       if (!field) return [];
       if (Array.isArray(field)) return field;
@@ -162,7 +154,6 @@ export const updateInfluencer = async (req, res) => {
       }
     };
 
-    // ✅ SAFE NUMBER PARSE
     const parsedFollowers =
       followersCount !== undefined
         ? Number(followersCount)
@@ -173,7 +164,6 @@ export const updateInfluencer = async (req, res) => {
         ? Number(engagementRate)
         : influencer.engagementRate;
 
-    // ✅ UNIQUE CHECK
     if (
       instagramUsername &&
       instagramUsername !== influencer.instagramUsername
@@ -205,7 +195,6 @@ export const updateInfluencer = async (req, res) => {
       }
     }
 
-    // ✅ IMAGE UPDATE
     let profilePhoto = influencer.profilePhoto;
 
     if (req.file) {
@@ -221,7 +210,6 @@ export const updateInfluencer = async (req, res) => {
       profilePhoto = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
     }
 
-    // ✅ SLUG UPDATE
     const updatedSlug =
       fullName || instagramUsername
         ? slugify(
@@ -232,7 +220,6 @@ export const updateInfluencer = async (req, res) => {
           )
         : influencer.slug;
 
-    // ✅ GENDER FIX
     let formattedGender = influencer.gender;
 
     if (gender) {
@@ -252,7 +239,6 @@ export const updateInfluencer = async (req, res) => {
       formattedGender = temp;
     }
 
-    // ✅ UPDATE
     await influencer.update(
       {
         fullName: fullName || influencer.fullName,
@@ -273,7 +259,7 @@ export const updateInfluencer = async (req, res) => {
         contentCategories: contentCategories
           ? parseArray(contentCategories)
           : influencer.contentCategories,
-        email: email || influencer.email, // ✅ NEW
+        email: email || influencer.email,
         dob: dob || influencer.dob,
       },
       { transaction },
@@ -287,9 +273,7 @@ export const updateInfluencer = async (req, res) => {
       data: convertToString(influencer.toJSON()),
     });
   } catch (error) {
-    console.error("UPDATE ERROR:", error);
     await transaction.rollback();
-
     return res.status(500).json({
       success: false,
       message: error.message,
