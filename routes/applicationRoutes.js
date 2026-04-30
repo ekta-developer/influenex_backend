@@ -9,7 +9,6 @@ import {
 } from "../controller/ApplicationController.js";
 import { verifyToken } from "../middleware/AuthMiddleware.js";
 
-
 const router = express.Router();
 
 router.post("/", verifyToken, applyToCampaign);

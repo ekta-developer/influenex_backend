@@ -20,11 +20,8 @@ const Application = sequelize.define(
     },
 
     influencer_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
-      validate: {
-        isInt: true,
-      },
     },
 
     brand_id: {

@@ -1,50 +1,57 @@
 import Application from "../models/Application.js";
 import BusinessRegistration from "../models/Business.js";
 import InfluencerUser from "../models/InfluencerUser.js";
+import validator from "validator";
+
+const { isUUID } = validator;
 /**
  * @desc    Influencer applies to a campaign
  * @route   POST /api/applications
  * @access  Influencer (Protected)
  */
+
 export const applyToCampaign = async (req, res) => {
   try {
-    const { campaignId, pitchMessage, expectedRate } = req.body;
-
+    const { campaignId, pitchMessage, expectedRate, brandId } = req.body;
     const user = req.user;
-    console.log(user, "kjwdcjwbcwbvh");
 
-    // ✅ STEP 1: Check if user exists
+    // ✅ Auth check
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized: User not found in token",
+        message: "Unauthorized",
       });
     }
 
-    // ✅ STEP 2: ROLE CHECK FIRST (VERY IMPORTANT)
+    // ✅ Role check
     if (user.userType !== "influencer") {
       return res.status(403).json({
         success: false,
-        message:
-          "You are logged in as Brand. Only Influencers are allowed to apply to campaigns.",
+        message: "Only influencers can apply",
       });
     }
 
-    // ✅ STEP 3: Now safely use influencerId
-    const influencerId = user.userId;
-
-    // Extra safety check
-    if (!influencerId) {
+    const influencerId = String(user.userId);
+    const campaignIdStr = String(campaignId); // convert to string
+    // ✅ Validate UUID
+    if (!validator.isUUID(influencerId)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid user token: influencer ID missing",
+        message: "Invalid influencer ID",
       });
     }
+    const campaignIdNum = Number(campaignId);
 
+    if (!campaignId || isNaN(campaignIdNum)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid campaign ID",
+      });
+    }
     // 🔍 Check duplicate
     const existing = await Application.findOne({
       where: {
-        campaign_id: campaignId,
+        campaign_id: campaignIdNum,
         influencer_id: influencerId,
       },
     });
@@ -52,28 +59,29 @@ export const applyToCampaign = async (req, res) => {
     if (existing) {
       return res.status(400).json({
         success: false,
-        message: "You have already applied to this campaign",
+        message: "Already applied to this campaign",
       });
     }
 
-    // 📝 Create application
+    // 📝 Create
     const application = await Application.create({
-      campaign_id: campaignId,
+      user_id: user.userId, // ✅ FIXED
+      campaign_id: campaignIdNum,
       influencer_id: influencerId,
-      brand_id: req.body.brandId,
+      brand_id: brandId,
       pitch_message: pitchMessage,
       expected_rate: expectedRate,
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Application submitted successfully",
       data: application,
     });
   } catch (error) {
-    console.log("ERROR:", error);
+    console.error("ERROR:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -87,27 +95,51 @@ export const applyToCampaign = async (req, res) => {
  */
 export const getMyApplications = async (req, res) => {
   try {
-    // Get influencer ID from token
-    const influencerId = req.user.userId;
+    const user = req.user;
 
-    // Fetch all applications created by this influencer
+    // ✅ Auth check
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    // ✅ Role check
+    if (user.userType !== "influencer") {
+      return res.status(403).json({
+        success: false,
+        message: "Only influencers can view their applications",
+      });
+    }
+
+    const influencerId = String(user.userId);
+
+    // ✅ UUID validation
+    if (!validator.isUUID(influencerId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid influencer ID",
+      });
+    }
+
     const applications = await Application.findAll({
       where: { influencer_id: influencerId },
-      order: [["createdAt", "DESC"]], // Latest first
+      order: [["createdAt", "DESC"]],
     });
 
-    res.json({
+    return res.json({
       success: true,
+      count: applications.length,
       data: applications,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
-
 /**
  * @desc    Get all applications for a specific campaign
  * @route   GET /api/applications/campaign/:campaignId
@@ -115,26 +147,40 @@ export const getMyApplications = async (req, res) => {
  */
 export const getApplicationsByCampaign = async (req, res) => {
   try {
-    // Extract campaign ID from URL params
-    const { campaign_id } = req.params;
+    // ✅ Correct param name
+    const { campaignId } = req.params;
 
-    // Fetch all applications for this campaign
+    // ✅ Validation
+    if (!campaignId) {
+      return res.status(400).json({
+        success: false,
+        message: "campaignId is required",
+      });
+    }
+
+    // If DB column is INTEGER
+    if (isNaN(campaignId)) {
+      return res.status(400).json({
+        success: false,
+        message: "campaignId must be a number",
+      });
+    }
+
     const applications = await Application.findAll({
-      where: { campaign_id: campaign_id },
+      where: { campaign_id: Number(campaignId) }, // DB column stays campaign_id
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: applications,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
-
 import Deal from "../models/Deal.js";
 import sequelize from "../config/database.js";
 
@@ -149,20 +195,42 @@ export const acceptApplication = async (req, res) => {
 
   try {
     const { id } = req.params;
+    const user = req.user;
 
-    // ✅ Extract businessId from token
-    const businessId = req.user?.userId;
-
-    if (!businessId) {
+    // ✅ Auth check
+    if (!user) {
       await transaction.rollback();
       return res.status(401).json({
         success: false,
-        message: "Unauthorized: Business ID not found in token",
+        message: "Unauthorized",
+      });
+    }
+
+    // ✅ Role check
+    if (user.userType !== "business") {
+      await transaction.rollback();
+      return res.status(403).json({
+        success: false,
+        message: "Only brands can accept applications",
+      });
+    }
+
+    const businessId = user.userId;
+
+    // ✅ Validate ID (INTEGER)
+    const applicationId = Number(id);
+    if (!id || isNaN(applicationId)) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Invalid application ID",
       });
     }
 
     // 🔍 Find application
-    const application = await Application.findByPk(id, { transaction });
+    const application = await Application.findByPk(applicationId, {
+      transaction,
+    });
 
     if (!application) {
       await transaction.rollback();
@@ -172,19 +240,40 @@ export const acceptApplication = async (req, res) => {
       });
     }
 
-    // ✅ Update application
+    // ❌ Prevent re-accept
+    if (application.status !== "pending") {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: `Application already ${application.status}`,
+      });
+    }
+
+    // ❌ Ownership check (VERY IMPORTANT)
+    if (application.brand_id !== user.brandId) {
+      await transaction.rollback();
+      return res.status(403).json({
+        success: false,
+        message: "You cannot accept this application",
+      });
+    }
+
+    // ✅ Update status
     application.status = "accepted";
     await application.save({ transaction });
 
-    // 🔥 OPTIONAL: fetch business & influencer names (for denormalization)
-    const business = await BusinessRegistration.findByPk(businessId);
-    const influencer = await InfluencerUser.findByPk(application.influencer_id);
-    console.log(application, "hiiii this is application data");
+    // ❌ Prevent duplicate deal
+    const existingDeal = await Deal.findOne({
+      where: { application_id: application.id },
+    });
 
-    console.log("USER:", req.user);
-    console.log("BUSINESS ID:", businessId);
-    console.log("APPLICATION:", application);
-    console.log("INFLUENCER ID:", application?.influencer_id);
+    if (existingDeal) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Deal already exists for this application",
+      });
+    }
 
     // 🤝 Create Deal
     const deal = await Deal.create(
@@ -197,22 +286,19 @@ export const acceptApplication = async (req, res) => {
         agreed_price: application.expected_rate || 0,
         deal_status: "accepted",
       },
-      {
-        transaction,
-        logging: console.log, // 🔥 VERY IMPORTANT
-      },
+      { transaction },
     );
+
     await transaction.commit();
 
-    res.json({
+    return res.json({
       success: true,
       message: "Application accepted and deal created",
       data: deal,
     });
   } catch (error) {
     await transaction.rollback();
-
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -227,9 +313,35 @@ export const acceptApplication = async (req, res) => {
 export const rejectApplication = async (req, res) => {
   try {
     const { id } = req.params;
+    const user = req.user;
 
-    // Find application
-    const application = await Application.findByPk(id);
+    // ✅ Auth
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    // ✅ Role check
+    if (user.userType !== "business") {
+      return res.status(403).json({
+        success: false,
+        message: "Only brands can reject applications",
+      });
+    }
+
+    const applicationId = Number(id);
+
+    // ✅ Validate ID
+    if (!id || isNaN(applicationId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid application ID",
+      });
+    }
+
+    const application = await Application.findByPk(applicationId);
 
     if (!application) {
       return res.status(404).json({
@@ -238,22 +350,36 @@ export const rejectApplication = async (req, res) => {
       });
     }
 
-    // ❌ Update status to rejected
+    // ❌ Prevent re-action
+    if (application.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: `Application already ${application.status}`,
+      });
+    }
+
+    // ❌ Ownership check
+    if (application.brand_id !== user.brandId) {
+      return res.status(403).json({
+        success: false,
+        message: "You cannot reject this application",
+      });
+    }
+
     application.status = "rejected";
     await application.save();
 
-    res.json({
+    return res.json({
       success: true,
       message: "Application rejected successfully",
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
-
 /**
  * @desc    Influencer withdraws their application
  * @route   POST /api/applications/:id/withdraw
