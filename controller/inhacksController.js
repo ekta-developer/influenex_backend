@@ -2,7 +2,7 @@ import { convertIdToStringHacks } from "../HelperFunction/Helper.js";
 import InHacks from "../models/InHacks.js";
 
 // const baseUrl = "http://192.168.1.104:5000/";
-   const baseUrl = "13.201.88.246";
+const baseUrl = "http://13.201.88.246/";
 
 // CREATE VIDEO
 export const createInhack = async (req, res) => {
@@ -16,6 +16,7 @@ export const createInhack = async (req, res) => {
     const video_url = req.files?.video ? req.files.video[0].filename : null;
 
     const data = await InHacks.create({
+      user_id: req.user.userId, // ✅ FIXED
       title,
       description,
       thumbnail,
@@ -29,11 +30,11 @@ export const createInhack = async (req, res) => {
     const formatted = convertIdToStringHacks(data);
 
     formatted.thumbnail = thumbnail
-      ? baseUrl + "uploads/thumbnails/" + thumbnail
+      ? `${baseUrl}uploads/thumbnails/${thumbnail}`
       : null;
 
     formatted.video_url = video_url
-      ? baseUrl + "uploads/videos/" + video_url
+      ? `${baseUrl}uploads/videos/${video_url}`
       : null;
 
     res.json({

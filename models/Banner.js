@@ -16,8 +16,6 @@ const Banner = sequelize.define(
       allowNull: false,
       validate: {
         notEmpty: true,
-        len: [3, 255], // prevent very long/malicious input
-        is: /^[a-zA-Z0-9._/-]+$/i, // allow safe file paths only
       },
     },
     user_id: {

@@ -14,11 +14,11 @@ const router = express.Router();
 
 router.post(
   "/create",
+  verifyToken,
   upload.fields([
     { name: "thumbnail", maxCount: 1 },
     { name: "video", maxCount: 1 },
   ]),
-  verifyToken,
   createInhack,
 );
 

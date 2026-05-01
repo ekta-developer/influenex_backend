@@ -42,13 +42,18 @@ export const createBanner = async (req, res) => {
 
     const banner = await Banner.create({
       image: imagePath,
+      user_id: req.user.userId,
     });
+
+    // ✅ FIX IMAGE URL
+    const imageUrl = `${req.protocol}://${req.get("host")}/${imagePath.replace(/\\/g, "/")}`;
 
     res.status(201).json({
       response: {
         success: true,
         message: "Banner uploaded Successfully",
         ...banner.dataValues,
+        image: imageUrl, // ✅ override with proper URL
       },
     });
   } catch (error) {
@@ -69,9 +74,16 @@ export const getAllBanners = async (req, res) => {
       order: [["id", "DESC"]],
     });
 
+    const updatedBanners = banners.map((banner) => {
+      return {
+        ...banner.dataValues,
+        image: `${req.protocol}://${req.get("host")}/${banner.image.replace(/\\/g, "/")}`,
+      };
+    });
+
     res.status(200).json({
       success: true,
-      data: banners,
+      data: updatedBanners,
     });
   } catch (error) {
     res.status(500).json({
@@ -120,14 +132,15 @@ export const updateBanner = async (req, res) => {
     }
 
     /* DELETE OLD IMAGE IF NEW IMAGE UPLOADED */
-
     if (req.file && banner.image) {
       if (fs.existsSync(banner.image)) {
         fs.unlinkSync(banner.image);
       }
-
       banner.image = req.file.path;
     }
+
+    // ✅ UPDATE USER_ID FROM TOKEN
+    banner.user_id = req.user.userId;
 
     await banner.save();
 

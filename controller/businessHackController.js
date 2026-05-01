@@ -4,15 +4,25 @@ import { convertIdToStringBusiness } from "../HelperFunction/Helper.js";
 // ✅ CREATE
 export const createBusinessHack = async (req, res) => {
   try {
-    const { campaignName, state, city, campaignType } = req.body;
+    // ✅ Prevent destructure crash
+    const { campaignName, state, city, campaignType } = req.body || {};
+
+    // ✅ Validation
+    if (!campaignName || !state || !city || !campaignType) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
 
     const businessHack = await BusinessHack.create({
-      user_id: req.user.userId, // FIXED HERE
+      user_id: req.user.userId,
       campaignName,
       state,
       city,
       campaignType,
     });
+
     res.status(201).json({
       success: true,
       message: "Business Hack created successfully",

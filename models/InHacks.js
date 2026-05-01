@@ -42,7 +42,6 @@ const InHacks = sequelize.define(
       type: DataTypes.STRING,
       validate: {
         len: [0, 255],
-        isUrl: true,
       },
     },
 

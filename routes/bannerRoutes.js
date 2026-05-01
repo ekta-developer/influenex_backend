@@ -6,19 +6,20 @@ import {
   getBannerById,
   updateBanner,
   deleteBanner,
-  uploadBanner
+  uploadBanner,
 } from "../controller/bannerController.js";
+import { verifyToken } from "../middleware/AuthMiddleware.js";
 
 const router = express.Router();
 
-router.post("/create", uploadBanner, createBanner);
+router.post("/create", verifyToken, uploadBanner, createBanner);
 
-router.get("/", getAllBanners);
+router.get("/", verifyToken, getAllBanners);
 
-router.get("/:id", getBannerById);
+router.get("/:id", verifyToken, getBannerById);
 
-router.put("/update/:id", uploadBanner, updateBanner);
+router.put("/update/:id", verifyToken, uploadBanner, updateBanner);
 
-router.delete("/delete/:id", deleteBanner);
+router.delete("/delete/:id", verifyToken, deleteBanner);
 
 export default router;
