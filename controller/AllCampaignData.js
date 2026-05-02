@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import BusinessHack from "../models/BusinessHacks.js";
 import BusinessHackDetails from "../models/BusinessHackDetail.js";
 import BusinessHackStep3 from "../models/BusinessHackDetail2.js";
@@ -6,26 +7,26 @@ import { formatImagePath } from "../HelperFunction/Helper.js";
 
 export const getAllBusinessHackData = async (req, res) => {
   try {
-    const userId = req.user?.userId;
+    console.log("GET ALL BUSINESS HACK DATA CALLED", req.user);
 
-    // ✅ सुरक्षा check
-    if (!userId) {
-      return res.status(401).json({
+    const role = req.user?.userType; // will be 'influencer' after middleware fix
+
+    // ✅ Only influencer can access this data
+    if (role !== "influencer") {
+      return res.status(403).json({
         success: false,
-        message: "Unauthorized (user not found in token)",
+        message: "Access denied. Only influencers can view this data.",
       });
     }
-
-    console.log("User ID:", userId);
-
-    // ✅ Step 1: Get all hacks of this user
+    // ✅ Fetch ALL hacks without any condition
     const hacks = await BusinessHack.findAll({
-      where: { user_id: userId },
       order: [["id", "DESC"]],
       raw: true,
     });
 
-    if (!hacks.length) {
+    console.log("Total Hacks Found:", hacks.length);
+
+    if (!hacks || hacks.length === 0) {
       return res.status(200).json({
         success: true,
         message: "No data found",
@@ -33,68 +34,79 @@ export const getAllBusinessHackData = async (req, res) => {
       });
     }
 
-    // ✅ Extract all hack IDs
-    const hackIds = hacks.map((h) => h.id);
+    const hackIds = hacks.map((item) => item.id);
+    console.log("Hack IDs:", hackIds);
 
-    // ✅ Step 2: Fetch all related data in ONE GO (🔥 optimized)
+    // ✅ Fetch all related data in parallel
     const [details, step3Data, step4Data] = await Promise.all([
       BusinessHackDetails.findAll({
-        where: { businessHackId: hackIds },
+        where: { businessHackId: { [Op.in]: hackIds } },
         raw: true,
       }),
       BusinessHackStep3.findAll({
-        where: { businessHackId: hackIds },
+        where: { businessHackId: { [Op.in]: hackIds } },
         raw: true,
       }),
       BusinessHackStep4.findAll({
-        where: { businessHackId: hackIds },
+        where: { businessHackId: { [Op.in]: hackIds } },
         raw: true,
       }),
     ]);
 
-    // ✅ Step 3: Convert arrays to map for fast lookup
+    console.log("Details:", details.length);
+    console.log("Step3:", step3Data.length);
+    console.log("Step4:", step4Data.length);
+
+    // ✅ Build maps keyed by businessHackId
     const detailsMap = {};
     const step3Map = {};
     const step4Map = {};
 
-    details.forEach((d) => {
-      detailsMap[d.businessHackId] = d;
+    details.forEach((item) => (detailsMap[item.businessHackId] = item));
+    step3Data.forEach((item) => (step3Map[item.businessHackId] = item));
+    step4Data.forEach((item) => (step4Map[item.businessHackId] = item));
+
+    // ✅ Merge all data
+    const fullData = hacks.map((hack) => {
+      const step4 = step4Map[hack.id];
+
+      let parsedSampleMedia = [];
+      if (step4?.sampleMedia) {
+        try {
+          const raw =
+            typeof step4.sampleMedia === "string"
+              ? JSON.parse(step4.sampleMedia)
+              : step4.sampleMedia;
+          parsedSampleMedia = Array.isArray(raw)
+            ? raw.map((media) => formatImagePath(media))
+            : [];
+        } catch {
+          parsedSampleMedia = [];
+        }
+      }
+
+      return {
+        business_hack: hack,
+        business_hack_details: detailsMap[hack.id] || null,
+        business_hack_step3: step3Map[hack.id] || null,
+        business_hack_step4: step4
+          ? {
+              ...step4,
+              campaignImage: formatImagePath(step4.campaignImage),
+              sampleMedia: parsedSampleMedia,
+            }
+          : null,
+      };
     });
-
-    step3Data.forEach((s) => {
-      step3Map[s.businessHackId] = s;
-    });
-
-    step4Data.forEach((s) => {
-      step4Map[s.businessHackId] = s;
-    });
-
-    // ✅ Step 4: Merge all data
-    const fullData = hacks.map((hack) => ({
-      business_hack: hack,
-      business_hack_details: detailsMap[hack.id] || null,
-      business_hack_step3: step3Map[hack.id] || null,
-      business_hack_step4: step4Map[hack.id]
-        ? {
-            ...step4Map[hack.id],
-
-            campaignImage: formatImagePath(step4Map[hack.id].campaignImage),
-
-            sampleMedia: Array.isArray(step4Map[hack.id].sampleMedia)
-              ? step4Map[hack.id].sampleMedia.map(formatImagePath)
-              : [],
-          }
-        : null,
-    }));
 
     return res.status(200).json({
       success: true,
       message: "Data fetched successfully",
+      total: fullData.length,
       data: fullData,
     });
   } catch (error) {
-    console.error("MAIN ERROR:", error);
-
+    console.error("ERROR:", error);
     return res.status(500).json({
       success: false,
       message: error.message,

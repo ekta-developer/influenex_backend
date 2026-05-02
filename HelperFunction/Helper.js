@@ -15,21 +15,17 @@ export const convertToString = (obj) => {
 };
 
 export const convertIdToString = (data) => {
+  // Handle null/undefined
+  if (!data) return data;
+
+  // Handle arrays
   if (Array.isArray(data)) {
-    return data.map((item) => {
-      const obj = item.toJSON();
-
-      Object.keys(obj).forEach((key) => {
-        if (typeof obj[key] === "number") {
-          obj[key] = obj[key].toString();
-        }
-      });
-
-      return obj;
-    });
+    return data.map((item) => convertIdToString(item));
   }
 
-  const obj = data.toJSON();
+  // Support BOTH:
+  // Sequelize instance AND raw object
+  const obj = typeof data.toJSON === "function" ? data.toJSON() : { ...data };
 
   Object.keys(obj).forEach((key) => {
     if (typeof obj[key] === "number") {
@@ -39,7 +35,6 @@ export const convertIdToString = (data) => {
 
   return obj;
 };
-
 export const convertIdToStringHacks = (list) => {
   if (!list) return [];
 
@@ -74,7 +69,6 @@ export const convertIdToStringBusiness = (list) => {
   };
 };
 
-
 export const normalizeGender = (gender) => {
   const allowed = ["Male", "Female", "Other", "All"];
 
@@ -86,7 +80,7 @@ export const normalizeGender = (gender) => {
   // If object (checkbox case)
   if (typeof gender === "object" && gender !== null) {
     return Object.keys(gender).filter(
-      (key) => gender[key] === true && allowed.includes(key)
+      (key) => gender[key] === true && allowed.includes(key),
     );
   }
 
