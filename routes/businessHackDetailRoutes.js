@@ -5,7 +5,7 @@ import {
   getBusinessHackDetailById,
   updateBusinessHackDetail,
   deleteBusinessHackDetail,
-} from "../controller/businessHackDetailController.js";
+} from "../controller/businessHackDetail2Controller.js";
 import { verifyToken } from "../middleware/AuthMiddleware.js";
 
 const router = express.Router();
