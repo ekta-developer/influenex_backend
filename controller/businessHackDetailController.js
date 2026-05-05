@@ -23,7 +23,7 @@ export const createBusinessHackDetail = async (req, res) => {
         user_id: req.user.userId,
       },
     });
-
+    console.log("Campaign found for Step-2 creation:", !!campaign);
     if (!campaign) {
       return res.status(403).json({
         success: false,

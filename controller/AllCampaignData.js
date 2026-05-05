@@ -113,3 +113,155 @@ export const getAllBusinessHackData = async (req, res) => {
     });
   }
 };
+
+// ✅ NEW API CONTROLLER that fetch logged in business registered campaigns only
+// ✅ GET ONLY BUSINESS USER CREATED CAMPAIGNS
+export const getBusinessUserCampaigns = async (req, res) => {
+  try {
+    console.log("GET BUSINESS USER CAMPAIGNS API CALLED");
+
+    // ✅ Correct token field
+    const userId = req.user?.userId;
+    const role = req.user?.userType;
+
+    console.log("Logged In User:", req.user);
+
+    // ✅ Only business users allowed
+    if (role !== "business") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Only business users can access this API.",
+      });
+    }
+
+    // ✅ Validate token user ID
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "User ID missing in token.",
+      });
+    }
+
+    // ✅ Fetch campaigns created by logged-in business user
+    const hacks = await BusinessHack.findAll({
+      where: {
+        user_id: userId,
+      },
+      order: [["createdAt", "DESC"]],
+      raw: true,
+    });
+
+    console.log("Campaigns Found:", hacks.length);
+
+    // ✅ No campaigns
+    if (!hacks.length) {
+      return res.status(200).json({
+        success: true,
+        message: "No campaigns found",
+        total: 0,
+        data: [],
+      });
+    }
+
+    const hackIds = hacks.map((item) => item.id);
+
+    // ✅ Fetch related tables
+    const [details, step3Data, step4Data] = await Promise.all([
+      BusinessHackDetails.findAll({
+        where: {
+          businessHackId: {
+            [Op.in]: hackIds,
+          },
+        },
+        raw: true,
+      }),
+
+      BusinessHackStep3.findAll({
+        where: {
+          businessHackId: {
+            [Op.in]: hackIds,
+          },
+        },
+        raw: true,
+      }),
+
+      BusinessHackStep4.findAll({
+        where: {
+          businessHackId: {
+            [Op.in]: hackIds,
+          },
+        },
+        raw: true,
+      }),
+    ]);
+
+    // ✅ Maps
+    const detailsMap = {};
+    const step3Map = {};
+    const step4Map = {};
+
+    details.forEach((item) => {
+      detailsMap[item.businessHackId] = item;
+    });
+
+    step3Data.forEach((item) => {
+      step3Map[item.businessHackId] = item;
+    });
+
+    step4Data.forEach((item) => {
+      step4Map[item.businessHackId] = item;
+    });
+
+    // ✅ Final merged response
+    const fullData = hacks.map((hack) => {
+      const step4 = step4Map[hack.id];
+
+      let parsedSampleMedia = [];
+
+      if (step4?.sampleMedia) {
+        try {
+          const media =
+            typeof step4.sampleMedia === "string"
+              ? JSON.parse(step4.sampleMedia)
+              : step4.sampleMedia;
+
+          parsedSampleMedia = Array.isArray(media)
+            ? media.map((item) => formatImagePath(item))
+            : [];
+        } catch (err) {
+          parsedSampleMedia = [];
+        }
+      }
+
+      return {
+        business_hack: hack,
+
+        business_hack_details: detailsMap[hack.id] || null,
+
+        business_hack_step3: step3Map[hack.id] || null,
+
+        business_hack_step4: step4
+          ? {
+              ...step4,
+              campaignImage: formatImagePath(step4.campaignImage),
+              sampleMedia: parsedSampleMedia,
+            }
+          : null,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Business campaigns fetched successfully",
+      total: fullData.length,
+      data: fullData,
+    });
+  } catch (error) {
+    console.error("ERROR IN GET BUSINESS CAMPAIGNS:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
