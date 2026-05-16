@@ -1,10 +1,12 @@
 import { Op } from "sequelize";
-import BusinessHack from "../models/BusinessHacks.js";
-import BusinessHackDetails from "../models/BusinessHackDetail.js";
-import BusinessHackStep3 from "../models/BusinessHackDetail2.js";
-import BusinessHackStep4 from "../models/BusinessHackStep4.js";
-import { formatImagePath } from "../HelperFunction/Helper.js";
 
+import {
+  BusinessHack,
+  BusinessHackDetail,
+  BusinessHackStep3,
+  BusinessHackStep4,
+} from "../models/Associations.js";
+import { formatImagePath } from "../HelperFunction/Helper.js";
 export const getAllBusinessHackData = async (req, res) => {
   try {
     console.log("GET ALL BUSINESS HACK DATA CALLED", req.user);
@@ -258,6 +260,58 @@ export const getBusinessUserCampaigns = async (req, res) => {
     });
   } catch (error) {
     console.error("ERROR IN GET BUSINESS CAMPAIGNS:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+//get all campigns creted by one business user
+export const getBusinessCampaigns = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const role = req.user?.userType;
+
+    // Only business user allowed
+    if (role !== "business") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied",
+      });
+    }
+
+    const campaigns = await BusinessHack.findAll({
+      where: {
+        user_id: userId,
+      },
+
+      include: [
+        {
+          model: BusinessHackDetail,
+          as: "business_hack_details",
+        },
+        {
+          model: BusinessHackStep3,
+          as: "business_hack_step3",
+        },
+        {
+          model: BusinessHackStep4,
+          as: "business_hack_step4",
+        },
+      ],
+
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json({
+      success: true,
+      total: campaigns.length,
+      data: campaigns,
+    });
+  } catch (error) {
+    console.log(error);
 
     return res.status(500).json({
       success: false,

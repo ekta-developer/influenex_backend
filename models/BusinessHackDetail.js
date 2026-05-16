@@ -2,7 +2,6 @@ import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 import BusinessHack from "./BusinessHacks.js";
 import xss from "xss";
-
 const BusinessHackDetail = sequelize.define(
   "BusinessHackDetail",
   {
@@ -174,10 +173,6 @@ function calculateBudget(data) {
 BusinessHack.hasOne(BusinessHackDetail, {
   foreignKey: "businessHackId",
   onDelete: "CASCADE",
-});
-
-BusinessHackDetail.belongsTo(BusinessHack, {
-  foreignKey: "businessHackId",
 });
 
 export default BusinessHackDetail;

@@ -38,7 +38,7 @@ import applicationRoutes from "./routes/applicationRoutes.js";
 import dealRoutes from "./routes/dealRoutes.js";
 import { seedCampaignTypes } from "./seeders/seedCampaignTypes.js";
 import { runAllSeeders } from "./seeders/runAllSeeders.js";
-
+import "./models/Associations.js";
 // ❌ REMOVE bodyParser (not needed)
 // import bodyParser from "body-parser";
 const app = express();

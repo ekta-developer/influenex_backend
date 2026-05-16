@@ -222,8 +222,4 @@ BusinessHack.hasOne(BusinessHackStep3, {
   onDelete: "CASCADE",
 });
 
-BusinessHackStep3.belongsTo(BusinessHack, {
-  foreignKey: "businessHackId",
-});
-
 export default BusinessHackStep3;
