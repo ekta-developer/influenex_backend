@@ -2,7 +2,7 @@ import Application from "../models/Application.js";
 import BusinessRegistration from "../models/Business.js";
 import InfluencerUser from "../models/InfluencerUser.js";
 import validator from "validator";
-
+import User from "../models/User.js";
 const { isUUID } = validator;
 /**
  * @desc    Influencer applies to a campaign
@@ -419,6 +419,86 @@ export const withdrawApplication = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message,
+    });
+  }
+};
+
+// //get all influencer applicants for a campaign (brand user)
+// export const getCampaignApplicants = async (req, res) => {
+//   try {
+//     const { campaignId } = req.params;
+
+//     const applications = await Application.findAll({
+//       where: {
+//         campaign_id: campaignId,
+//       },
+
+//       include: [
+//         {
+//           model: User,
+//           as: "influencer", // association alias
+//           attributes: ["id", "name", "email", "profilePhoto", "followers"],
+//         },
+//       ],
+
+//       order: [["createdAt", "DESC"]],
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       totalApplicants: applications.length,
+//       data: applications,
+//     });
+//   } catch (error) {
+//     console.log(error);
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "Failed to fetch applicants",
+//       error: error.message,
+//     });
+//   }
+// };
+
+//api to get all influencers applied to a campaign (brand user)
+export const getCampaignApplicants = async (req, res) => {
+  try {
+    const { campaignId } = req.params;
+
+    if (!campaignId) {
+      return res.status(400).json({
+        success: false,
+        message: "Campaign ID is required",
+      });
+    }
+
+    const applicants = await Application.findAll({
+      where: {
+        campaign_id: campaignId,
+      },
+
+      include: [
+        {
+          model: User,
+          as: "influencer", // association alias
+          attributes: ["id", "name", "email"],
+        },
+      ],
+
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json({
+      success: true,
+      total: applicants.length,
+      data: applicants,
+    });
+  } catch (error) {
+    console.error("Get Campaign Applicants Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
     });
   }
 };
