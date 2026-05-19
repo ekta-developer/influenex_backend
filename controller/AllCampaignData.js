@@ -41,7 +41,7 @@ export const getAllBusinessHackData = async (req, res) => {
 
     // ✅ Fetch all related data in parallel
     const [details, step3Data, step4Data] = await Promise.all([
-      BusinessHackDetails.findAll({
+      BusinessHackDetail.findAll({
         where: { businessHackId: { [Op.in]: hackIds } },
         raw: true,
       }),
@@ -169,7 +169,7 @@ export const getBusinessUserCampaigns = async (req, res) => {
 
     // ✅ Fetch related tables
     const [details, step3Data, step4Data] = await Promise.all([
-      BusinessHackDetails.findAll({
+      BusinessHackDetail.findAll({
         where: {
           businessHackId: {
             [Op.in]: hackIds,
